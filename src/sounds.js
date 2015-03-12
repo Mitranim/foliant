@@ -4,7 +4,7 @@
 
 // Glyphs and digraphs in common English use. This doesn't represent all common
 // phonemes.
-const knownSounds = new Set([
+const knownSounds = new StringSet([
   // Digraphs
   'ae', 'ch', 'ng', 'ph', 'sh', 'th', 'zh',
   // ISO basic Latin monographs
@@ -13,7 +13,7 @@ const knownSounds = new Set([
 ])
 
 // Vowel glyphs and digraphs in common English use.
-const knownVowels = new Set([
+const knownVowels = new StringSet([
   // Digraphs
   'ae',
   // ISO basic Latin monographs

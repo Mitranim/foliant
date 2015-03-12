@@ -15,14 +15,14 @@ class Traits extends null {
   // Maximum number of consequtive consonants.
   maxConseqCons: number;
   // Set of sounds that occur in the words.
-  soundSet: Set;
+  soundSet: StringSet;
   // Set of pairs of sounds that occur in the words.
   pairSet: PairSet;
 
   // Replacement sound set to use instead of the default `knownSounds`.
-  knownSounds: Set;
+  knownSounds: StringSet;
   // Replacement sound set to use instead of the default `knownVowels`.
-  knownVowels: Set;
+  knownVowels: StringSet;
 
   constructor(words?: string[]) {
     this.minNSounds    = 0
@@ -31,7 +31,7 @@ class Traits extends null {
     this.maxNVowels    = 0
     this.maxConseqVow  = 0
     this.maxConseqCons = 0
-    this.soundSet      = new Set()
+    this.soundSet      = new StringSet()
     this.pairSet       = new PairSet()
 
     if (words instanceof Array) this.examine(words)
@@ -39,7 +39,7 @@ class Traits extends null {
 
   // Examines an array of words and merges their traits into self.
   examine(words: string[]): void {
-    for (let word of words) traits$examineWord.call(this, word)
+    _.each(words, traits$examineWord.bind(this))
   }
 
   // Creates a generator function that returns a new word on each call. The
@@ -98,21 +98,21 @@ function traits$examineWord(word: string) {
   this.maxConseqCons = Math.max(this.maxConseqCons, traits$maxConsequtiveConsonants.call(this, sounds))
 
   // Merge set of used sounds.
-  for (let sound of sounds) this.soundSet.add(sound)
+  _.each(sounds, sound => this.soundSet.add(sound))
 
   // Find set of pairs of sounds.
-  for (let pair of getPairs(sounds)) this.pairSet.add(pair)
+  _.each(getPairs(sounds), pair => this.pairSet.add(pair))
 }
 
-function traits$knownSounds(): Set {
-  if (this.knownSounds instanceof Set && this.knownSounds.size) {
+function traits$knownSounds(): StringSet {
+  if (this.knownSounds instanceof StringSet && this.knownSounds.size) {
     return this.knownSounds
   }
   return knownSounds
 }
 
 function traits$knownVowels() {
-  if (this.knownVowels instanceof Set && this.knownVowels.size) {
+  if (this.knownVowels instanceof StringSet && this.knownVowels.size) {
     return this.knownVowels
   }
   return knownVowels
@@ -135,9 +135,7 @@ function traits$validPart(...sounds: string[]): boolean {
 
   // If there's only one sound, check if it's among the first sounds of pairs.
   if (sounds.length === 1) {
-    for (var pair of this.pairSet) {
-      if (pair[0] === sounds[0]) return true
-    }
+    if (_.any(this.pairSet, pair => pair[0] === sounds[0])) return true
   }
 
   // Check if the pair sequence is valid per Traits.validPairs.
@@ -225,10 +223,10 @@ function traits$validPairs(sounds: string[]): boolean {
 function traits$maxConsequtiveVowels(sounds: string[]): number {
   var count, max = 0
   var known = traits$knownVowels.call(this)
-  for (let sound of sounds) {
+  _.each(sounds, sound => {
     if (!known.has(sound)) count = 0
     else max = Math.max(max, ++count)
-  }
+  })
   return max
 }
 
@@ -238,10 +236,10 @@ function traits$maxConsequtiveConsonants(sounds: string[]): number {
   var count = 0
   var max = 0
   var known = traits$knownVowels.call(this)
-  for (let sound of sounds) {
+  _.each(sounds, sound => {
     if (known.has(sound)) count = 0
     else max = Math.max(max, ++count)
-  }
+  })
   return max
 }
 
@@ -249,6 +247,6 @@ function traits$maxConsequtiveConsonants(sounds: string[]): number {
 function traits$countVowels(sounds: string[]): number {
   var count = 0
   var known = traits$knownVowels.call(this)
-  for (let sound of sounds) if (known.has(sound)) count++
+  _.each(sounds, sound => {if (known.has(sound)) count++})
   return count
 }

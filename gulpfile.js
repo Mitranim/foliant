@@ -34,8 +34,9 @@ var wrapper =
   })(function(module, _) {\n\
     <%= contents %>\n\
     module.exports = Traits;\n\
-    if (typeof process === 'object' && process !== null && process.env.CODEX_ENV === 'testing') Traits.PairSet = PairSet;\n\
     if (typeof process === 'object' && process !== null && process.env.CODEX_ENV === 'testing') Traits.Pair = Pair;\n\
+    if (typeof process === 'object' && process !== null && process.env.CODEX_ENV === 'testing') Traits.PairSet = PairSet;\n\
+    Traits.StringSet = StringSet;\n\
   });"
 
 /*********************************** Tasks ***********************************/
