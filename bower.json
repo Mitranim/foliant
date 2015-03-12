@@ -1,0 +1,16 @@
+{
+  "name": "foliant",
+  "version": "0.0.1",
+  "description": "Generator of random synthetic words.",
+  "author": "Mitranim",
+  "main": "dist/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Mitranim/foliant.git"
+  },
+  "keywords": [],
+  "dependencies": {
+    "angular": "*",
+    "lodash": "*"
+  }
+}
