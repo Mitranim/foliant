@@ -4,8 +4,9 @@
 
 var _ = require('lodash')
 var Traits = require('../dist/index')
-var PairSet = Traits.PairSet
 var Pair = Traits.Pair
+var PairSet = Traits.PairSet
+var StringSet = Traits.StringSet
 
 /*********************************** Specs ***********************************/
 
@@ -28,8 +29,8 @@ describe('Traits constructor', function() {
     expect(traits.maxNVowels).toBe(0)
     expect(traits.maxConseqVow).toBe(0)
     expect(traits.maxConseqCons).toBe(0)
-    expect(traits.soundSet).toEqual(jasmine.any(Set))
-    expect(traits.pairSet).toEqual(jasmine.any(Object))
+    expect(traits.soundSet).toEqual(jasmine.any(StringSet))
+    expect(traits.pairSet).toEqual(jasmine.any(PairSet))
   })
 
 })
@@ -51,9 +52,9 @@ describe('Traits instance', function() {
     var soundSet = mockSoundSet()
 
     // Compare soundsets.
-    expect(soundSet.size).toBe(10)
-    expect(traits.soundSet.size).toBe(soundSet.size)
-    for (var sound of soundSet.values()) {
+    expect(_.size(soundSet)).toBe(10)
+    expect(_.size(traits.soundSet)).toBe(_.size(soundSet))
+    for (var sound in soundSet) {
       expect(traits.soundSet.has(sound)).toBe(true)
     }
 
@@ -87,7 +88,7 @@ describe('generator function', function() {
   })
 
   it('never repeats a word and eventually exhausts', function() {
-    var words = new Set()
+    var words = new StringSet()
 
     while (true) {
       var word = this.gen()
@@ -98,15 +99,15 @@ describe('generator function', function() {
     }
 
     // Check the size, too.
-    expect(words.size).toBeGreaterThan(50)
+    expect(_.size(words)).toBeGreaterThan(50)
   })
 
   it('only returns valid complete words', function() {
-    var words = new Set()
+    var words = new StringSet()
     var word
     while (word = this.gen()) words.add(word)
 
-    for (var word of words) {
+    for (var word in words) {
       var valid = isValid(word)
       expect(valid).toBe(true)
       if (!valid) return
@@ -114,7 +115,7 @@ describe('generator function', function() {
   })
 
   it('includes source words', function() {
-    var words = new Set()
+    var words = new StringSet()
     var word
     while (word = this.gen()) words.add(word)
 
@@ -142,13 +143,13 @@ function mockVowels() {
 }
 
 function mockSoundSet() {
-  var set = new Set()
+  var set = new StringSet()
   for (var sound of mockSounds()) set.add(sound)
   return set
 }
 
 function mockVowelSet() {
-  var set = new Set()
+  var set = new StringSet()
   for (var vowel of mockVowels()) set.add(vowel)
   return set
 }

@@ -13,8 +13,8 @@ class State extends null {
 
   // Walks the virtual tree of the state's traits, caching the visited parts in
   // the state's inner tree. This caching lets us skip repeated
-  // Traits.validPart() checks, individual visited nodes, and fully visited
-  // subtrees. This significantly speeds up state.trip() traversals that restart
+  // Traits#validPart() checks, individual visited nodes, and fully visited
+  // subtrees. This significantly speeds up State#trip() traversals that restart
   // from the root on each call, and lets us avoid revisiting nodes. This method
   // also randomises the order of visiting subtrees from each node.
   walk(iterator: (...sounds: string[]) => void, ...sounds: string[]): void {
@@ -27,16 +27,15 @@ class State extends null {
     }
 
     // Loop over remaining child nodes and investigate their subtrees.
-    for (let sound of _.shuffle(_.keys(node.nodes))) {
+    _.each(_.shuffle(_.keys(node.nodes)), sound => {
       var path = sounds.concat(sound)
       // Invalidate the path if it doesn't qualify as a partial word.
       if (!traits$validPart.call(this.traits, ...path)) {
         delete node.nodes[sound]
-        continue
+        return
       }
       // (1)(2) -> pre-order, (2)(1) -> post-order. Post-order is required by
-      // state.walkRandom(); it slows down state.Words() by about 10-15%, which
-      // doesn't warrant its own separate algorithm.
+      // State#walkRandom().
       // (2) Continue recursively.
       this.walk(iterator, ...path)
       // (1) If this path hasn't yet been visited, feed it to the iterator.
@@ -45,7 +44,7 @@ class State extends null {
       }
       // If this code is reached, the subtree is used up, so we forget about it.
       delete node.nodes[sound]
-    }
+    })
   }
 
   // Walks the state's virtual tree; for each path given to the wrapper
@@ -55,8 +54,8 @@ class State extends null {
   // words and haven't been visited before.
   walkRandom(iterator: (...sounds: string[]) => void): void {
     this.walk((...sounds: string[]) => {
-      for (let index of _.shuffle(_.range(sounds.length))) {
-        if (!index) continue
+      _.each(_.shuffle(_.range(sounds.length)), index => {
+        if (!index) return
         var path = sounds.slice(0, index + 1)
         var node = this.tree.at(...path)
         if (!node.visited) {
@@ -65,7 +64,7 @@ class State extends null {
             iterator(...path)
           }
         }
-      }
+      })
     })
   }
 
