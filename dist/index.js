@@ -52,17 +52,7 @@ var Traits = (function (_ref) {
 
   _inherits(Traits, _ref);
 
-  _prototypeProperties(Traits, {
-    validate: {
-      value: function validate(value) {
-        if (!(value instanceof Traits)) {
-          throw new TypeError("expected a Traits object, got: " + value);
-        }
-      },
-      writable: true,
-      configurable: true
-    }
-  }, {
+  _prototypeProperties(Traits, null, {
     examine: {
 
       // Examines an array of words and merges their traits into self.
@@ -108,7 +98,7 @@ var Traits = (function (_ref) {
 function traits$examineWord(word) {
   var _this = this;
 
-  string$validate(word);
+  assertString(word);
 
   // Validate the length.
   if (word.length < 2 && word.length > 32) {
@@ -116,7 +106,7 @@ function traits$examineWord(word) {
   }
 
   // Split into sounds.
-  var sounds = getSounds(word, traits$knownSounds.call(this));
+  var sounds = getSounds(word, this.knownSounds || knownSounds);
 
   // Mandate at least two sounds.
   if (sounds.length < 2) {
@@ -147,20 +137,6 @@ function traits$examineWord(word) {
   _.each(getPairs(sounds), function (pair) {
     return _this.pairSet.add(pair);
   });
-}
-
-function traits$knownSounds() {
-  if (this.knownSounds instanceof StringSet && this.knownSounds.size) {
-    return this.knownSounds;
-  }
-  return knownSounds;
-}
-
-function traits$knownVowels() {
-  if (this.knownVowels instanceof StringSet && this.knownVowels.size) {
-    return this.knownVowels;
-  }
-  return knownVowels;
 }
 
 // Checks whether the given combination of sounds satisfies the conditions for
@@ -288,7 +264,7 @@ function traits$validPairs(sounds) {
 function traits$maxConsequtiveVowels(sounds) {
   var count,
       max = 0;
-  var known = traits$knownVowels.call(this);
+  var known = this.knownVowels || knownVowels;
   _.each(sounds, function (sound) {
     if (!known.has(sound)) count = 0;else max = Math.max(max, ++count);
   });
@@ -300,7 +276,7 @@ function traits$maxConsequtiveVowels(sounds) {
 function traits$maxConsequtiveConsonants(sounds) {
   var count = 0;
   var max = 0;
-  var known = traits$knownVowels.call(this);
+  var known = this.knownVowels || knownVowels;
   _.each(sounds, function (sound) {
     if (known.has(sound)) count = 0;else max = Math.max(max, ++count);
   });
@@ -310,7 +286,7 @@ function traits$maxConsequtiveConsonants(sounds) {
 // Counts how many sounds from the given sequence occur among own known vowels.
 function traits$countVowels(sounds) {
   var count = 0;
-  var known = traits$knownVowels.call(this);
+  var known = this.knownVowels || knownVowels;
   _.each(sounds, function (sound) {
     if (known.has(sound)) count++;
   });
@@ -323,24 +299,13 @@ var State = (function (_ref2) {
   function State(traits) {
     _classCallCheck(this, State);
 
-    Traits.validate(traits);
     this.traits = traits;
     this.tree = new Tree();
   }
 
   _inherits(State, _ref2);
 
-  _prototypeProperties(State, {
-    validate: {
-      value: function validate(value) {
-        if (!(value instanceof State)) {
-          throw new TypeError("expected a State object, got: " + value);
-        }
-      },
-      writable: true,
-      configurable: true
-    }
-  }, {
+  _prototypeProperties(State, null, {
     walk: {
 
       // Walks the virtual tree of the state's traits, caching the visited parts in
@@ -498,15 +463,6 @@ var Tree = (function (_ref3) {
       },
       writable: true,
       configurable: true
-    },
-    validate: {
-      value: function validate(value) {
-        if (!(value instanceof Tree)) {
-          throw new TypeError("expected a Tree object, got: " + value);
-        }
-      },
-      writable: true,
-      configurable: true
     }
   }, {
     at: {
@@ -541,7 +497,6 @@ var StringSet = (function (_ref4) {
     _classCallCheck(this, StringSet);
 
     _.each(values, function (value) {
-      string$validate(value);
       _this.add(value);
     });
   }
@@ -551,7 +506,6 @@ var StringSet = (function (_ref4) {
   _prototypeProperties(StringSet, null, {
     has: {
       value: function has(value) {
-        string$validate(value);
         return this[value] === null;
       },
       writable: true,
@@ -559,7 +513,6 @@ var StringSet = (function (_ref4) {
     },
     add: {
       value: function add(value) {
-        string$validate(value);
         this[value] = null;
       },
       writable: true,
@@ -567,7 +520,6 @@ var StringSet = (function (_ref4) {
     },
     del: {
       value: function del(value) {
-        string$validate(value);
         delete this[value];
       },
       writable: true,
@@ -589,7 +541,6 @@ var PairSet = (function (Array) {
     _classCallCheck(this, PairSet);
 
     _.each(pairs, function (pair) {
-      Pair.validate(pair);
       _this.add(pair);
     });
   }
@@ -599,7 +550,6 @@ var PairSet = (function (Array) {
   _prototypeProperties(PairSet, null, {
     has: {
       value: function has(pair) {
-        Pair.validate(pair);
         return _.any(this, function (existing) {
           return pair[0] === existing[0] && pair[1] === existing[1];
         });
@@ -609,7 +559,6 @@ var PairSet = (function (Array) {
     },
     add: {
       value: function add(pair) {
-        Pair.validate(pair);
         if (!this.has(pair)) this.push(pair);
       },
       writable: true,
@@ -617,7 +566,6 @@ var PairSet = (function (Array) {
     },
     del: {
       value: function del(pair) {
-        Pair.validate(pair);
         _.remove(this, function (existing) {
           return pair[0] === existing[0] && pair[1] === existing[1];
         });
@@ -638,25 +586,13 @@ var Pair = (function (_ref5) {
   function Pair(one, two) {
     _classCallCheck(this, Pair);
 
-    string$validate(one);
-    string$validate(two);
+    assertString(one);
+    assertString(two);
     this[0] = one;
     this[1] = two;
   }
 
   _inherits(Pair, _ref5);
-
-  _prototypeProperties(Pair, {
-    validate: {
-      value: function validate(value) {
-        if (!(value instanceof Pair)) {
-          throw new TypeError("expected a Pair, got: " + value);
-        }
-      },
-      writable: true,
-      configurable: true
-    }
-  });
 
   return Pair;
 })(null);
@@ -709,8 +645,8 @@ function countPair(strings, prev, current) {
   return count;
 }
 
-// Validates the given value as a string.
-function string$validate(value) {
+// Asserts that the given value is a string.
+function assertString(value) {
   if (typeof value !== "string") {
     throw new TypeError("expected a string, got: " + value);
   }

@@ -29,7 +29,7 @@ class Traits extends null {
   }
 
   // Examines an array of words and merges their traits into self.
-  examine(words: ?string[]) {
+  examine(words: string[]) {
     _.each(words, traits$examineWord.bind(this))
   }
 
@@ -45,12 +45,6 @@ class Traits extends null {
     }
   }
 
-  static validate(value: ?Traits) {
-    if (!(value instanceof Traits)) {
-      throw new TypeError('expected a Traits object, got: ' + value)
-    }
-  }
-
 }
 
 /*--------------------------------- Private ---------------------------------*/
@@ -58,7 +52,7 @@ class Traits extends null {
 // Takes a word, extracts its characteristics, and merges them into self. If the
 // word doesn't satisfy our limitations, returns an error.
 function traits$examineWord(word: string) {
-  string$validate(word)
+  assertString(word)
 
   // Validate the length.
   if (word.length < 2 && word.length > 32) {
@@ -66,7 +60,7 @@ function traits$examineWord(word: string) {
   }
 
   // Split into sounds.
-  var sounds = getSounds(word, traits$knownSounds.call(this))
+  var sounds = getSounds(word, this.knownSounds || knownSounds)
 
   // Mandate at least two sounds.
   if (sounds.length < 2) {
@@ -93,20 +87,6 @@ function traits$examineWord(word: string) {
 
   // Find set of pairs of sounds.
   _.each(getPairs(sounds), pair => this.pairSet.add(pair))
-}
-
-function traits$knownSounds(): StringSet {
-  if (this.knownSounds instanceof StringSet && this.knownSounds.size) {
-    return this.knownSounds
-  }
-  return knownSounds
-}
-
-function traits$knownVowels() {
-  if (this.knownVowels instanceof StringSet && this.knownVowels.size) {
-    return this.knownVowels
-  }
-  return knownVowels
 }
 
 // Checks whether the given combination of sounds satisfies the conditions for
@@ -213,7 +193,7 @@ function traits$validPairs(sounds: string[]): boolean {
 // sound sequence.
 function traits$maxConsequtiveVowels(sounds: string[]): number {
   var count, max = 0
-  var known = traits$knownVowels.call(this)
+  var known = this.knownVowels || knownVowels
   _.each(sounds, sound => {
     if (!known.has(sound)) count = 0
     else max = Math.max(max, ++count)
@@ -226,7 +206,7 @@ function traits$maxConsequtiveVowels(sounds: string[]): number {
 function traits$maxConsequtiveConsonants(sounds: string[]): number {
   var count = 0
   var max = 0
-  var known = traits$knownVowels.call(this)
+  var known = this.knownVowels || knownVowels
   _.each(sounds, sound => {
     if (known.has(sound)) count = 0
     else max = Math.max(max, ++count)
@@ -237,7 +217,7 @@ function traits$maxConsequtiveConsonants(sounds: string[]): number {
 // Counts how many sounds from the given sequence occur among own known vowels.
 function traits$countVowels(sounds: string[]): number {
   var count = 0
-  var known = traits$knownVowels.call(this)
+  var known = this.knownVowels || knownVowels
   _.each(sounds, sound => {if (known.has(sound)) count++})
   return count
 }
@@ -247,7 +227,6 @@ function traits$countVowels(sounds: string[]): number {
 class State extends null {
 
   constructor(traits: Traits) {
-    Traits.validate(traits)
     this.traits = traits
     this.tree = new Tree()
   }
@@ -258,7 +237,7 @@ class State extends null {
   // subtrees. This significantly speeds up State#trip() traversals that restart
   // from the root on each call, and lets us avoid revisiting nodes. This method
   // also randomises the order of visiting subtrees from each node.
-  walk(iterator: (...sounds: string[]) => void, ...sounds: string[]): void {
+  walk(iterator: (...sounds: string[]) => void, ...sounds: string[]) {
 
     // Find or create a matching node for this path. If it doesn't have child
     // nodes yet, make a shallow map to track valid paths.
@@ -293,7 +272,7 @@ class State extends null {
   // nodes as visited. For the distribution to be random, the tree needs to be
   // traversed in post-order. We only visit paths that qualify as valid complete
   // words and haven't been visited before.
-  walkRandom(iterator: (...sounds: string[]) => void): void {
+  walkRandom(iterator: (...sounds: string[]) => void) {
     this.walk((...sounds: string[]) => {
       _.each(_.shuffle(_.range(sounds.length)), index => {
         if (!index) return
@@ -309,7 +288,7 @@ class State extends null {
     })
   }
 
-  trip(iterator: (...sounds: string[]) => void): void {
+  trip(iterator: (...sounds: string[]) => void) {
     try {
       this.walkRandom((...sounds) => {
         iterator(...sounds)
@@ -317,12 +296,6 @@ class State extends null {
       })
     } catch (err) {
       if (err !== null) throw err
-    }
-  }
-
-  static validate(value: ?State) {
-    if (!(value instanceof State)) {
-      throw new TypeError('expected a State object, got: ' + value)
     }
   }
 
@@ -375,12 +348,6 @@ class Tree extends null {
     return nodes
   }
 
-  static validate(value: ?Tree) {
-    if (!(value instanceof Tree)) {
-      throw new TypeError('expected a Tree object, got: ' + value)
-    }
-  }
-
 }
 
 /********************************* StringSet *********************************/
@@ -388,27 +355,15 @@ class Tree extends null {
 // Behaves like a set of strings. Does not conform to the Set API.
 class StringSet extends null {
 
-  constructor(values?: string[]) {
+  constructor(values: string[]) {
     _.each(values, value => {
-      string$validate(value)
       this.add(value)
     })
   }
 
-  has(value: string): boolean {
-    string$validate(value)
-    return this[value] === null
-  }
-
-  add(value: string) {
-    string$validate(value)
-    this[value] = null
-  }
-
-  del(value: string) {
-    string$validate(value)
-    delete this[value]
-  }
+  has(value: string): boolean {return this[value] === null}
+  add(value: string) {this[value] = null}
+  del(value: string) {delete this[value]}
 
 }
 
@@ -417,27 +372,23 @@ class StringSet extends null {
 // Behaves like a set of pairs of strings. Does not conform to the Set API.
 class PairSet extends Array {
 
-  constructor(pairs?: Pair[]) {
+  constructor(pairs: ?Pair[]) {
     _.each(pairs, pair => {
-      Pair.validate(pair)
       this.add(pair)
     })
   }
 
-  has(pair: ?Pair): boolean {
-    Pair.validate(pair)
+  has(pair: Pair): boolean {
     return _.any(this, existing => {
       return pair[0] === existing[0] && pair[1] === existing[1]
     })
   }
 
-  add(pair: ?Pair): void {
-    Pair.validate(pair)
+  add(pair: Pair) {
     if (!this.has(pair)) this.push(pair)
   }
 
-  del(pair: ?Pair): void {
-    Pair.validate(pair)
+  del(pair: Pair) {
     _.remove(this, existing => {
       return pair[0] === existing[0] && pair[1] === existing[1]
     })
@@ -451,17 +402,12 @@ class PairSet extends Array {
 class Pair extends null {
 
   constructor(one: string, two: string) {
-    string$validate(one)
-    string$validate(two)
+    assertString(one)
+    assertString(two)
     this[0] = one
     this[1] = two
   }
 
-  static validate(value: ?Pair) {
-    if (!(value instanceof Pair)) {
-      throw new TypeError('expected a Pair, got: ' + value)
-    }
-  }
 }
 
 /********************************* Utilities *********************************/
@@ -514,8 +460,8 @@ function countPair(strings: string[], prev: string, current: string): number {
   return count
 }
 
-// Validates the given value as a string.
-function string$validate(value: ?string): void {
+// Asserts that the given value is a string.
+function assertString(value: ?string) {
   if (typeof value !== 'string') {
     throw new TypeError('expected a string, got: ' + value)
   }
