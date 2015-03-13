@@ -9,390 +9,9 @@
   })(function(module, _) {
     "use strict";
 
-var _prototypeProperties = function (child, staticProps, instanceProps) { if (staticProps) Object.defineProperties(child, staticProps); if (instanceProps) Object.defineProperties(child.prototype, instanceProps); };
-
-var _inherits = function (subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; };
-
-var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
-
-/*********************************** Tree ************************************/
-
-var Tree = (function (_ref) {
-  function Tree() {
-    _classCallCheck(this, Tree);
-
-    this.nodes = null;
-    this.visited = false;
-  }
-
-  _inherits(Tree, _ref);
-
-  _prototypeProperties(Tree, {
-    sprout: {
-
-      // Creates child nodes for a tree from the given pairs on the given path.
-
-      value: function sprout(pairs) {
-        for (var _len = arguments.length, path = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-          path[_key - 1] = arguments[_key];
-        }
-
-        var nodes = Object.create(null);
-
-        // If no sound were passed, start from the root.
-        if (!path.length) {
-          _.each(pairs, function (pair) {
-            nodes[pair[0]] = nodes[pair[0]] || new Tree();
-          });
-        }
-        // Otherwise continue from the given path.
-        else {
-          // [ ... sounds ... ( last sound ] <- pair -> next sound )
-          //
-          // We investigate pairs that begin with the last sound of the given
-          // preceding sounds. Their second sounds form a set that, when individually
-          // appended to the preceding sounds, form foundation paths for child
-          // subtrees. We register these second sounds on the child node map.
-          _.each(pairs, function (pair) {
-            if (pair[0] === path[path.length - 1]) {
-              nodes[pair[1]] = new Tree();
-            }
-          });
-        }
-
-        return nodes;
-      },
-      writable: true,
-      configurable: true
-    },
-    validate: {
-      value: function validate(value) {
-        if (!(value instanceof Tree)) {
-          throw new TypeError("expected a Tree object, got: " + value);
-        }
-      },
-      writable: true,
-      configurable: true
-    }
-  }, {
-    at: {
-      value: function at() {
-        for (var _len = arguments.length, path = Array(_len), _key = 0; _key < _len; _key++) {
-          path[_key] = arguments[_key];
-        }
-
-        var node = this;
-        _.each(path, function (value) {
-          if (!node.nodes[value]) node.nodes[value] = new Tree();
-          node = node.nodes[value];
-        });
-        return node;
-      },
-      writable: true,
-      configurable: true
-    }
-  });
-
-  return Tree;
-})(null);
-
-/********************************* StringSet *********************************/
-
-// Behaves like a set of strings. Does not conform to the Set API.
-
-var StringSet = (function (_ref2) {
-  function StringSet(values) {
-    var _this = this;
-
-    _classCallCheck(this, StringSet);
-
-    _.each(values, function (value) {
-      string$validate(value);
-      _this.add(value);
-    });
-  }
-
-  _inherits(StringSet, _ref2);
-
-  _prototypeProperties(StringSet, null, {
-    has: {
-      value: function has(value) {
-        string$validate(value);
-        return this[value] === null;
-      },
-      writable: true,
-      configurable: true
-    },
-    add: {
-      value: function add(value) {
-        string$validate(value);
-        this[value] = null;
-      },
-      writable: true,
-      configurable: true
-    },
-    del: {
-      value: function del(value) {
-        string$validate(value);
-        delete this[value];
-      },
-      writable: true,
-      configurable: true
-    }
-  });
-
-  return StringSet;
-})(null);
-
-/********************************** PairSet **********************************/
-
-// Behaves like a set of pairs of strings. Does not conform to the Set API.
-
-var PairSet = (function (Array) {
-  function PairSet(pairs) {
-    var _this = this;
-
-    _classCallCheck(this, PairSet);
-
-    _.each(pairs, function (pair) {
-      Pair.validate(pair);
-      _this.add(pair);
-    });
-  }
-
-  _inherits(PairSet, Array);
-
-  _prototypeProperties(PairSet, null, {
-    has: {
-      value: function has(pair) {
-        Pair.validate(pair);
-        return _.any(this, function (existing) {
-          return pair[0] === existing[0] && pair[1] === existing[1];
-        });
-      },
-      writable: true,
-      configurable: true
-    },
-    add: {
-      value: function add(pair) {
-        Pair.validate(pair);
-        if (!this.has(pair)) this.push(pair);
-      },
-      writable: true,
-      configurable: true
-    },
-    del: {
-      value: function del(pair) {
-        Pair.validate(pair);
-        _.remove(this, function (existing) {
-          return pair[0] === existing[0] && pair[1] === existing[1];
-        });
-      },
-      writable: true,
-      configurable: true
-    }
-  });
-
-  return PairSet;
-})(Array);
-
-/*********************************** Pair ************************************/
-
-// Pair of strings.
-
-var Pair = (function (_ref3) {
-  function Pair(one, two) {
-    _classCallCheck(this, Pair);
-
-    string$validate(one);
-    string$validate(two);
-    this[0] = one;
-    this[1] = two;
-  }
-
-  _inherits(Pair, _ref3);
-
-  _prototypeProperties(Pair, {
-    validate: {
-      value: function validate(value) {
-        if (!(value instanceof Pair)) {
-          throw new TypeError("expected a Pair, got: " + value);
-        }
-      },
-      writable: true,
-      configurable: true
-    }
-  });
-
-  return Pair;
-})(null);
-"use strict";
-
-/**
- * Defines known sounds.
- */
-
-// Glyphs and digraphs in common English use. This doesn't represent all common
-// phonemes.
-var knownSounds = new StringSet([
-// Digraphs
-"ae", "ch", "ng", "ph", "sh", "th", "zh",
-// ISO basic Latin monographs
-"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]);
-
-// Vowel glyphs and digraphs in common English use.
-var knownVowels = new StringSet([
-// Digraphs
-"ae",
-// ISO basic Latin monographs
-"a", "e", "i", "o", "u", "y"]);
-"use strict";
+var _slicedToArray = function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { var _arr = []; for (var _iterator = arr[Symbol.iterator](), _step; !(_step = _iterator.next()).done;) { _arr.push(_step.value); if (i && _arr.length === i) break; } return _arr; } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } };
 
 var _toConsumableArray = function (arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } };
-
-var _prototypeProperties = function (child, staticProps, instanceProps) { if (staticProps) Object.defineProperties(child, staticProps); if (instanceProps) Object.defineProperties(child.prototype, instanceProps); };
-
-var _inherits = function (subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; };
-
-var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
-
-/*********************************** State ***********************************/
-
-var State = (function (_ref) {
-  function State(traits) {
-    _classCallCheck(this, State);
-
-    Traits.validate(traits);
-    this.traits = traits;
-    this.tree = new Tree();
-  }
-
-  _inherits(State, _ref);
-
-  _prototypeProperties(State, {
-    validate: {
-      value: function validate(value) {
-        if (!(value instanceof State)) {
-          throw new TypeError("expected a State object, got: " + value);
-        }
-      },
-      writable: true,
-      configurable: true
-    }
-  }, {
-    walk: {
-
-      // Walks the virtual tree of the state's traits, caching the visited parts in
-      // the state's inner tree. This caching lets us skip repeated
-      // Traits#validPart() checks, individual visited nodes, and fully visited
-      // subtrees. This significantly speeds up State#trip() traversals that restart
-      // from the root on each call, and lets us avoid revisiting nodes. This method
-      // also randomises the order of visiting subtrees from each node.
-
-      value: function walk(iterator) {
-        var _this = this;
-
-        var _tree;
-
-        for (var _len = arguments.length, sounds = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-          sounds[_key - 1] = arguments[_key];
-        }
-
-        // Find or create a matching node for this path. If it doesn't have child
-        // nodes yet, make a shallow map to track valid paths.
-        var node = (_tree = this.tree).at.apply(_tree, sounds);
-        if (node.nodes === null) {
-          var _Tree;
-
-          node.nodes = (_Tree = Tree).sprout.apply(_Tree, [this.traits.pairSet].concat(sounds));
-        }
-
-        // Loop over remaining child nodes and investigate their subtrees.
-        _.each(_.shuffle(_.keys(node.nodes)), function (sound) {
-          var _traits$validPart, _ref2;
-
-          var path = sounds.concat(sound);
-          // Invalidate the path if it doesn't qualify as a partial word.
-          if (!(_traits$validPart = traits$validPart).call.apply(_traits$validPart, [_this.traits].concat(_toConsumableArray(path)))) {
-            delete node.nodes[sound];
-            return;
-          }
-          // (1)(2) -> pre-order, (2)(1) -> post-order. Post-order is required by
-          // State#walkRandom().
-          // (2) Continue recursively.
-          (_ref2 = _this).walk.apply(_ref2, [iterator].concat(_toConsumableArray(path)));
-          // (1) If this path hasn't yet been visited, feed it to the iterator.
-          if (!node.at(sound).visited) {
-            iterator.apply(undefined, _toConsumableArray(path));
-          }
-          // If this code is reached, the subtree is used up, so we forget about it.
-          delete node.nodes[sound];
-        });
-      },
-      writable: true,
-      configurable: true
-    },
-    walkRandom: {
-
-      // Walks the state's virtual tree; for each path given to the wrapper
-      // function, we visit its subpaths in random order, marking the corresponding
-      // nodes as visited. For the distribution to be random, the tree needs to be
-      // traversed in post-order. We only visit paths that qualify as valid complete
-      // words and haven't been visited before.
-
-      value: function walkRandom(iterator) {
-        var _this = this;
-
-        this.walk(function () {
-          for (var _len = arguments.length, sounds = Array(_len), _key = 0; _key < _len; _key++) {
-            sounds[_key] = arguments[_key];
-          }
-
-          _.each(_.shuffle(_.range(sounds.length)), function (index) {
-            var _tree;
-
-            if (!index) return;
-            var path = sounds.slice(0, index + 1);
-            var node = (_tree = _this.tree).at.apply(_tree, _toConsumableArray(path));
-            if (!node.visited) {
-              var _traits$checkPart;
-
-              node.visited = true;
-              if ((_traits$checkPart = traits$checkPart).call.apply(_traits$checkPart, [_this.traits].concat(_toConsumableArray(path)))) {
-                iterator.apply(undefined, _toConsumableArray(path));
-              }
-            }
-          });
-        });
-      },
-      writable: true,
-      configurable: true
-    },
-    trip: {
-      value: function trip(iterator) {
-        try {
-          this.walkRandom(function () {
-            for (var _len = arguments.length, sounds = Array(_len), _key = 0; _key < _len; _key++) {
-              sounds[_key] = arguments[_key];
-            }
-
-            iterator.apply(undefined, sounds);
-            throw null;
-          });
-        } catch (err) {
-          if (err !== null) throw err;
-        }
-      },
-      writable: true,
-      configurable: true
-    }
-  });
-
-  return State;
-})(null);
-"use strict";
-
-var _slicedToArray = function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { var _arr = []; for (var _iterator = arr[Symbol.iterator](), _step; !(_step = _iterator.next()).done;) { _arr.push(_step.value); if (i && _arr.length === i) break; } return _arr; } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } };
 
 var _prototypeProperties = function (child, staticProps, instanceProps) { if (staticProps) Object.defineProperties(child, staticProps); if (instanceProps) Object.defineProperties(child.prototype, instanceProps); };
 
@@ -408,14 +27,25 @@ var Traits = (function (_ref) {
   function Traits(words) {
     _classCallCheck(this, Traits);
 
+    // Minimum and maximum number of sounds.
     this.minNSounds = 0;
     this.maxNSounds = 0;
+    // Minimum and maximum number of vowels.
     this.minNVowels = 0;
     this.maxNVowels = 0;
+    // Maximum number of consequtive vowels.
     this.maxConseqVow = 0;
+    // Maximum number of consequtive consonants.
     this.maxConseqCons = 0;
+    // Set of sounds that occur in the words.
     this.soundSet = new StringSet();
+    // Set of pairs of sounds that occur in the words.
     this.pairSet = new PairSet();
+
+    // Replacement sound set to use instead of the default `knownSounds`.
+    this.knownSounds = null;
+    // Replacement sound set to use instead of the default `knownVowels`.
+    this.knownVowels = null;
 
     if (words instanceof Array) this.examine(words);
   }
@@ -480,8 +110,8 @@ function traits$examineWord(word) {
 
   string$validate(word);
 
-  // Make sure the length is okay.
-  if (!validLength(word)) {
+  // Validate the length.
+  if (word.length < 2 && word.length > 32) {
     throw new Error("the word is too short or too long");
   }
 
@@ -627,13 +257,13 @@ function traits$validPairs(sounds) {
       continue;
     }
 
-    var _ref2 = [lastPair, pair, new Pair(prev, current)];
+    var _ref6 = [lastPair, pair, new Pair(prev, current)];
 
-    var _ref22 = _slicedToArray(_ref2, 3);
+    var _ref62 = _slicedToArray(_ref6, 3);
 
-    secondLastPair = _ref22[0];
-    lastPair = _ref22[1];
-    pair = _ref22[2];
+    secondLastPair = _ref62[0];
+    lastPair = _ref62[1];
+    pair = _ref62[2];
 
     // Check for condition (2). This can only be done starting at index 3.
     if (index >= 3) {
@@ -687,25 +317,353 @@ function traits$countVowels(sounds) {
   return count;
 }
 
-// Minimum and maximum number of sounds.
+/*********************************** State ***********************************/
 
-// Minimum and maximum number of vowels.
+var State = (function (_ref2) {
+  function State(traits) {
+    _classCallCheck(this, State);
 
-// Maximum number of consequtive vowels.
+    Traits.validate(traits);
+    this.traits = traits;
+    this.tree = new Tree();
+  }
 
-// Maximum number of consequtive consonants.
+  _inherits(State, _ref2);
 
-// Set of sounds that occur in the words.
+  _prototypeProperties(State, {
+    validate: {
+      value: function validate(value) {
+        if (!(value instanceof State)) {
+          throw new TypeError("expected a State object, got: " + value);
+        }
+      },
+      writable: true,
+      configurable: true
+    }
+  }, {
+    walk: {
 
-// Set of pairs of sounds that occur in the words.
+      // Walks the virtual tree of the state's traits, caching the visited parts in
+      // the state's inner tree. This caching lets us skip repeated
+      // Traits#validPart() checks, individual visited nodes, and fully visited
+      // subtrees. This significantly speeds up State#trip() traversals that restart
+      // from the root on each call, and lets us avoid revisiting nodes. This method
+      // also randomises the order of visiting subtrees from each node.
 
-// Replacement sound set to use instead of the default `knownSounds`.
+      value: function walk(iterator) {
+        var _this = this;
 
-// Replacement sound set to use instead of the default `knownVowels`.
-"use strict";
+        var _tree;
+
+        for (var _len = arguments.length, sounds = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+          sounds[_key - 1] = arguments[_key];
+        }
+
+        // Find or create a matching node for this path. If it doesn't have child
+        // nodes yet, make a shallow map to track valid paths.
+        var node = (_tree = this.tree).at.apply(_tree, sounds);
+        if (node.nodes === null) {
+          node.nodes = Tree.sprout.apply(Tree, [this.traits.pairSet].concat(sounds));
+        }
+
+        // Loop over remaining child nodes and investigate their subtrees.
+        _.each(_.shuffle(_.keys(node.nodes)), function (sound) {
+          var _ref6;
+
+          var path = sounds.concat(sound);
+          // Invalidate the path if it doesn't qualify as a partial word.
+          if (!traits$validPart.call.apply(traits$validPart, [_this.traits].concat(_toConsumableArray(path)))) {
+            delete node.nodes[sound];
+            return;
+          }
+          // (1)(2) -> pre-order, (2)(1) -> post-order. Post-order is required by
+          // State#walkRandom().
+          // (2) Continue recursively.
+          (_ref6 = _this).walk.apply(_ref6, [iterator].concat(_toConsumableArray(path)));
+          // (1) If this path hasn't yet been visited, feed it to the iterator.
+          if (!node.at(sound).visited) {
+            iterator.apply(undefined, _toConsumableArray(path));
+          }
+          // If this code is reached, the subtree is used up, so we forget about it.
+          delete node.nodes[sound];
+        });
+      },
+      writable: true,
+      configurable: true
+    },
+    walkRandom: {
+
+      // Walks the state's virtual tree; for each path given to the wrapper
+      // function, we visit its subpaths in random order, marking the corresponding
+      // nodes as visited. For the distribution to be random, the tree needs to be
+      // traversed in post-order. We only visit paths that qualify as valid complete
+      // words and haven't been visited before.
+
+      value: function walkRandom(iterator) {
+        var _this = this;
+
+        this.walk(function () {
+          for (var _len = arguments.length, sounds = Array(_len), _key = 0; _key < _len; _key++) {
+            sounds[_key] = arguments[_key];
+          }
+
+          _.each(_.shuffle(_.range(sounds.length)), function (index) {
+            var _tree;
+
+            if (!index) return;
+            var path = sounds.slice(0, index + 1);
+            var node = (_tree = _this.tree).at.apply(_tree, _toConsumableArray(path));
+            if (!node.visited) {
+              node.visited = true;
+              if (traits$checkPart.call.apply(traits$checkPart, [_this.traits].concat(_toConsumableArray(path)))) {
+                iterator.apply(undefined, _toConsumableArray(path));
+              }
+            }
+          });
+        });
+      },
+      writable: true,
+      configurable: true
+    },
+    trip: {
+      value: function trip(iterator) {
+        try {
+          this.walkRandom(function () {
+            for (var _len = arguments.length, sounds = Array(_len), _key = 0; _key < _len; _key++) {
+              sounds[_key] = arguments[_key];
+            }
+
+            iterator.apply(undefined, sounds);
+            throw null;
+          });
+        } catch (err) {
+          if (err !== null) throw err;
+        }
+      },
+      writable: true,
+      configurable: true
+    }
+  });
+
+  return State;
+})(null);
+
+/*********************************** Tree ************************************/
+
+var Tree = (function (_ref3) {
+  function Tree() {
+    _classCallCheck(this, Tree);
+
+    // Map of strings to Tree objects. Keys represent node values (sounds).
+    this.nodes = null;
+    this.visited = false;
+  }
+
+  _inherits(Tree, _ref3);
+
+  _prototypeProperties(Tree, {
+    sprout: {
+
+      // Creates child nodes for a tree from the given pairs on the given path.
+
+      value: function sprout(pairs) {
+        for (var _len = arguments.length, path = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+          path[_key - 1] = arguments[_key];
+        }
+
+        var nodes = Object.create(null);
+
+        // If no sound were passed, start from the root.
+        if (!path.length) {
+          _.each(pairs, function (pair) {
+            nodes[pair[0]] = nodes[pair[0]] || new Tree();
+          });
+        }
+        // Otherwise continue from the given path.
+        else {
+          // [ ... sounds ... ( last sound ] <- pair -> next sound )
+          //
+          // We investigate pairs that begin with the last sound of the given
+          // preceding sounds. Their second sounds form a set that, when individually
+          // appended to the preceding sounds, form foundation paths for child
+          // subtrees. We register these second sounds on the child node map.
+          _.each(pairs, function (pair) {
+            if (pair[0] === path[path.length - 1]) {
+              nodes[pair[1]] = new Tree();
+            }
+          });
+        }
+
+        return nodes;
+      },
+      writable: true,
+      configurable: true
+    },
+    validate: {
+      value: function validate(value) {
+        if (!(value instanceof Tree)) {
+          throw new TypeError("expected a Tree object, got: " + value);
+        }
+      },
+      writable: true,
+      configurable: true
+    }
+  }, {
+    at: {
+      value: function at() {
+        for (var _len = arguments.length, path = Array(_len), _key = 0; _key < _len; _key++) {
+          path[_key] = arguments[_key];
+        }
+
+        var node = this;
+        _.each(path, function (value) {
+          if (!node.nodes[value]) node.nodes[value] = new Tree();
+          node = node.nodes[value];
+        });
+        return node;
+      },
+      writable: true,
+      configurable: true
+    }
+  });
+
+  return Tree;
+})(null);
+
+/********************************* StringSet *********************************/
+
+// Behaves like a set of strings. Does not conform to the Set API.
+
+var StringSet = (function (_ref4) {
+  function StringSet(values) {
+    var _this = this;
+
+    _classCallCheck(this, StringSet);
+
+    _.each(values, function (value) {
+      string$validate(value);
+      _this.add(value);
+    });
+  }
+
+  _inherits(StringSet, _ref4);
+
+  _prototypeProperties(StringSet, null, {
+    has: {
+      value: function has(value) {
+        string$validate(value);
+        return this[value] === null;
+      },
+      writable: true,
+      configurable: true
+    },
+    add: {
+      value: function add(value) {
+        string$validate(value);
+        this[value] = null;
+      },
+      writable: true,
+      configurable: true
+    },
+    del: {
+      value: function del(value) {
+        string$validate(value);
+        delete this[value];
+      },
+      writable: true,
+      configurable: true
+    }
+  });
+
+  return StringSet;
+})(null);
+
+/********************************** PairSet **********************************/
+
+// Behaves like a set of pairs of strings. Does not conform to the Set API.
+
+var PairSet = (function (Array) {
+  function PairSet(pairs) {
+    var _this = this;
+
+    _classCallCheck(this, PairSet);
+
+    _.each(pairs, function (pair) {
+      Pair.validate(pair);
+      _this.add(pair);
+    });
+  }
+
+  _inherits(PairSet, Array);
+
+  _prototypeProperties(PairSet, null, {
+    has: {
+      value: function has(pair) {
+        Pair.validate(pair);
+        return _.any(this, function (existing) {
+          return pair[0] === existing[0] && pair[1] === existing[1];
+        });
+      },
+      writable: true,
+      configurable: true
+    },
+    add: {
+      value: function add(pair) {
+        Pair.validate(pair);
+        if (!this.has(pair)) this.push(pair);
+      },
+      writable: true,
+      configurable: true
+    },
+    del: {
+      value: function del(pair) {
+        Pair.validate(pair);
+        _.remove(this, function (existing) {
+          return pair[0] === existing[0] && pair[1] === existing[1];
+        });
+      },
+      writable: true,
+      configurable: true
+    }
+  });
+
+  return PairSet;
+})(Array);
+
+/*********************************** Pair ************************************/
+
+// Pair of strings.
+
+var Pair = (function (_ref5) {
+  function Pair(one, two) {
+    _classCallCheck(this, Pair);
+
+    string$validate(one);
+    string$validate(two);
+    this[0] = one;
+    this[1] = two;
+  }
+
+  _inherits(Pair, _ref5);
+
+  _prototypeProperties(Pair, {
+    validate: {
+      value: function validate(value) {
+        if (!(value instanceof Pair)) {
+          throw new TypeError("expected a Pair, got: " + value);
+        }
+      },
+      writable: true,
+      configurable: true
+    }
+  });
+
+  return Pair;
+})(null);
 
 /********************************* Utilities *********************************/
 
+// Takes a word and splits it into a series of known glyphs representing sounds.
 function getSounds(word, known) {
   var sounds = [];
 
@@ -727,17 +685,13 @@ function getSounds(word, known) {
 }
 
 // Takes a sequence of sounds and returns the set of consequtive pairs that
-// occur in this sequence.
+// occur in it.
 function getPairs(sounds) {
   var pairs = new PairSet();
   for (var i = 0; i < sounds.length - 1; i++) {
     pairs.add(new Pair(sounds[i], sounds[i + 1]));
   }
   return pairs;
-}
-
-function validLength(word) {
-  return word.length > 1 && word.length < 33;
 }
 
 // Counts the occurrences of the given pair of strings in the given sequence.
@@ -755,13 +709,29 @@ function countPair(strings, prev, current) {
   return count;
 }
 
-/************************* Validators for Primitives *************************/
-
+// Validates the given value as a string.
 function string$validate(value) {
   if (typeof value !== "string") {
     throw new TypeError("expected a string, got: " + value);
   }
 }
+
+/******************************* Known Sounds ********************************/
+
+// Glyphs and digraphs in common English use. This doesn't represent all common
+// phonemes.
+var knownSounds = new StringSet([
+// Digraphs
+"ae", "ch", "ng", "ph", "sh", "th", "zh",
+// ISO basic Latin monographs
+"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]);
+
+// Vowel glyphs and digraphs in common English use.
+var knownVowels = new StringSet([
+// Digraphs
+"ae",
+// ISO basic Latin monographs
+"a", "e", "i", "o", "u", "y"]);
 // Check for a known monograph.
 // Otherwise throw an error.
     module.exports = Traits;

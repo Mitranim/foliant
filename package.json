@@ -23,13 +23,11 @@
     "benchmark": "^1.0.0",
     "gulp": "git://github.com/gulpjs/gulp#4.0",
     "gulp-babel": "^4.0.0",
-    "gulp-concat": "^2.5.2",
     "gulp-load-plugins": "^0.8.1",
     "gulp-plumber": "^0.6.6",
     "gulp-rimraf": "^0.1.1",
     "gulp-watch": "^4.1.1",
     "gulp-wrap": "^0.11.0",
-    "jasmine-node": "^1.14.5",
-    "shelljs": "^0.3.0"
+    "jasmine-node": "^1.14.5"
   }
 }

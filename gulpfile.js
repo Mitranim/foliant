@@ -9,15 +9,11 @@
 
 var $     = require('gulp-load-plugins')()
 var gulp  = require('gulp')
-var shell = require('shelljs')
 
 /********************************** Globals **********************************/
 
 // Source files.
 var src = './src/*.js'
-
-// Declarations.
-var decl = './declarations/*.js'
 
 // Destination directory.
 var dest = './dist/'
@@ -51,7 +47,6 @@ gulp.task('scripts:all', function() {
   return gulp.src(src)
     .pipe($.plumber())
     .pipe($.babel({modules: 'ignore'}))
-    .pipe($.concat('index.js'))
     .pipe($.wrap(wrapper))
     .pipe(gulp.dest(dest))
 })
@@ -64,7 +59,6 @@ gulp.task('scripts', gulp.series('scripts:clear', 'scripts:all'))
 // Watch
 gulp.task('watch', function() {
   $.watch(src,  gulp.series('scripts'))
-  $.watch(decl, gulp.series('scripts'))
 })
 
 // Default
