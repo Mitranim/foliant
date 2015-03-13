@@ -90,10 +90,6 @@ class StringSet extends null {
 class PairSet extends Array {
 
   constructor(pairs?: Pair[]) {
-    if (!pairs) return
-    if (!(pairs instanceof Array)) {
-      throw new TypeError('expected an array of Pairs, got: ' + pairs)
-    }
     _.each(pairs, pair => {
       Pair.validate(pair)
       this.add(pair)

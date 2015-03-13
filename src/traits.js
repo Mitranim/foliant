@@ -124,7 +124,7 @@ function traits$knownVowels() {
 //   2) if there's only one sound, it must be the first sound in at least one
 //      of the sound pairs in the given traits;
 //   3) if there's at least one pair, the sequence of pairs must be valid as
-//      defined in Traits.validPairs.
+//      defined in Traits#validPairs.
 function traits$validPart(...sounds: string[]): boolean {
   // Check numeric criteria.
   if (traits$countVowels.call(this, sounds) > this.maxNVowels ||
@@ -138,7 +138,7 @@ function traits$validPart(...sounds: string[]): boolean {
     if (_.any(this.pairSet, pair => pair[0] === sounds[0])) return true
   }
 
-  // Check if the pair sequence is valid per Traits.validPairs.
+  // Check if the pair sequence is valid per Traits#validPairs.
   if (sounds.length > 1 && !traits$validPairs.call(this, sounds)) {
     return false
   }
@@ -148,8 +148,8 @@ function traits$validPart(...sounds: string[]): boolean {
 
 // Checks whether the given sequence of sounds satisfies the criteria for a
 // complete word. This is defined as follows:
-//   1) the sequence satisfies the partial criteria per Traits.validPart();
-//   2) the sequence satisfies the complete criteria per Traits.checkPart().
+//   1) the sequence satisfies the partial criteria per Traits#validPart();
+//   2) the sequence satisfies the complete criteria per Traits#checkPart().
 function traits$validComplete(...sounds: string[]): boolean {
   return traits$validPart.call(this, ...sounds) && traits$checkPart.call(this, ...sounds)
 }

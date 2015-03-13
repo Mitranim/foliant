@@ -13,8 +13,8 @@ class State extends null {
 
   // Walks the virtual tree of the state's traits, caching the visited parts in
   // the state's inner tree. This caching lets us skip repeated
-  // Traits.validPart() checks, individual visited nodes, and fully visited
-  // subtrees. This significantly speeds up state.trip() traversals that restart
+  // Traits#validPart() checks, individual visited nodes, and fully visited
+  // subtrees. This significantly speeds up State#trip() traversals that restart
   // from the root on each call, and lets us avoid revisiting nodes. This method
   // also randomises the order of visiting subtrees from each node.
   walk(iterator: (...sounds: string[]) => void, ...sounds: string[]): void {
@@ -35,8 +35,7 @@ class State extends null {
         return
       }
       // (1)(2) -> pre-order, (2)(1) -> post-order. Post-order is required by
-      // state.walkRandom(); it slows down state.Words() by about 10-15%, which
-      // doesn't warrant its own separate algorithm.
+      // State#walkRandom().
       // (2) Continue recursively.
       this.walk(iterator, ...path)
       // (1) If this path hasn't yet been visited, feed it to the iterator.

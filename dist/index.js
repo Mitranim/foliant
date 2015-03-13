@@ -154,11 +154,6 @@ var PairSet = (function (Array) {
 
     _classCallCheck(this, PairSet);
 
-    if (!pairs) {
-      return;
-    }if (!(pairs instanceof Array)) {
-      throw new TypeError("expected an array of Pairs, got: " + pairs);
-    }
     _.each(pairs, function (pair) {
       Pair.validate(pair);
       _this.add(pair);
@@ -230,6 +225,170 @@ var Pair = (function (_ref3) {
   });
 
   return Pair;
+})(null);
+"use strict";
+
+/**
+ * Defines known sounds.
+ */
+
+// Glyphs and digraphs in common English use. This doesn't represent all common
+// phonemes.
+var knownSounds = new StringSet([
+// Digraphs
+"ae", "ch", "ng", "ph", "sh", "th", "zh",
+// ISO basic Latin monographs
+"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]);
+
+// Vowel glyphs and digraphs in common English use.
+var knownVowels = new StringSet([
+// Digraphs
+"ae",
+// ISO basic Latin monographs
+"a", "e", "i", "o", "u", "y"]);
+"use strict";
+
+var _toConsumableArray = function (arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } };
+
+var _prototypeProperties = function (child, staticProps, instanceProps) { if (staticProps) Object.defineProperties(child, staticProps); if (instanceProps) Object.defineProperties(child.prototype, instanceProps); };
+
+var _inherits = function (subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; };
+
+var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
+
+/*********************************** State ***********************************/
+
+var State = (function (_ref) {
+  function State(traits) {
+    _classCallCheck(this, State);
+
+    Traits.validate(traits);
+    this.traits = traits;
+    this.tree = new Tree();
+  }
+
+  _inherits(State, _ref);
+
+  _prototypeProperties(State, {
+    validate: {
+      value: function validate(value) {
+        if (!(value instanceof State)) {
+          throw new TypeError("expected a State object, got: " + value);
+        }
+      },
+      writable: true,
+      configurable: true
+    }
+  }, {
+    walk: {
+
+      // Walks the virtual tree of the state's traits, caching the visited parts in
+      // the state's inner tree. This caching lets us skip repeated
+      // Traits#validPart() checks, individual visited nodes, and fully visited
+      // subtrees. This significantly speeds up State#trip() traversals that restart
+      // from the root on each call, and lets us avoid revisiting nodes. This method
+      // also randomises the order of visiting subtrees from each node.
+
+      value: function walk(iterator) {
+        var _this = this;
+
+        var _tree;
+
+        for (var _len = arguments.length, sounds = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+          sounds[_key - 1] = arguments[_key];
+        }
+
+        // Find or create a matching node for this path. If it doesn't have child
+        // nodes yet, make a shallow map to track valid paths.
+        var node = (_tree = this.tree).at.apply(_tree, sounds);
+        if (node.nodes === null) {
+          var _Tree;
+
+          node.nodes = (_Tree = Tree).sprout.apply(_Tree, [this.traits.pairSet].concat(sounds));
+        }
+
+        // Loop over remaining child nodes and investigate their subtrees.
+        _.each(_.shuffle(_.keys(node.nodes)), function (sound) {
+          var _traits$validPart, _ref2;
+
+          var path = sounds.concat(sound);
+          // Invalidate the path if it doesn't qualify as a partial word.
+          if (!(_traits$validPart = traits$validPart).call.apply(_traits$validPart, [_this.traits].concat(_toConsumableArray(path)))) {
+            delete node.nodes[sound];
+            return;
+          }
+          // (1)(2) -> pre-order, (2)(1) -> post-order. Post-order is required by
+          // State#walkRandom().
+          // (2) Continue recursively.
+          (_ref2 = _this).walk.apply(_ref2, [iterator].concat(_toConsumableArray(path)));
+          // (1) If this path hasn't yet been visited, feed it to the iterator.
+          if (!node.at(sound).visited) {
+            iterator.apply(undefined, _toConsumableArray(path));
+          }
+          // If this code is reached, the subtree is used up, so we forget about it.
+          delete node.nodes[sound];
+        });
+      },
+      writable: true,
+      configurable: true
+    },
+    walkRandom: {
+
+      // Walks the state's virtual tree; for each path given to the wrapper
+      // function, we visit its subpaths in random order, marking the corresponding
+      // nodes as visited. For the distribution to be random, the tree needs to be
+      // traversed in post-order. We only visit paths that qualify as valid complete
+      // words and haven't been visited before.
+
+      value: function walkRandom(iterator) {
+        var _this = this;
+
+        this.walk(function () {
+          for (var _len = arguments.length, sounds = Array(_len), _key = 0; _key < _len; _key++) {
+            sounds[_key] = arguments[_key];
+          }
+
+          _.each(_.shuffle(_.range(sounds.length)), function (index) {
+            var _tree;
+
+            if (!index) return;
+            var path = sounds.slice(0, index + 1);
+            var node = (_tree = _this.tree).at.apply(_tree, _toConsumableArray(path));
+            if (!node.visited) {
+              var _traits$checkPart;
+
+              node.visited = true;
+              if ((_traits$checkPart = traits$checkPart).call.apply(_traits$checkPart, [_this.traits].concat(_toConsumableArray(path)))) {
+                iterator.apply(undefined, _toConsumableArray(path));
+              }
+            }
+          });
+        });
+      },
+      writable: true,
+      configurable: true
+    },
+    trip: {
+      value: function trip(iterator) {
+        try {
+          this.walkRandom(function () {
+            for (var _len = arguments.length, sounds = Array(_len), _key = 0; _key < _len; _key++) {
+              sounds[_key] = arguments[_key];
+            }
+
+            iterator.apply(undefined, sounds);
+            throw null;
+          });
+        } catch (err) {
+          if (err !== null) throw err;
+        }
+      },
+      writable: true,
+      configurable: true
+    }
+  });
+
+  return State;
 })(null);
 "use strict";
 
@@ -380,7 +539,7 @@ function traits$knownVowels() {
 //   2) if there's only one sound, it must be the first sound in at least one
 //      of the sound pairs in the given traits;
 //   3) if there's at least one pair, the sequence of pairs must be valid as
-//      defined in Traits.validPairs.
+//      defined in Traits#validPairs.
 function traits$validPart() {
   for (var _len = arguments.length, sounds = Array(_len), _key = 0; _key < _len; _key++) {
     sounds[_key] = arguments[_key];
@@ -400,7 +559,7 @@ function traits$validPart() {
     }
   }
 
-  // Check if the pair sequence is valid per Traits.validPairs.
+  // Check if the pair sequence is valid per Traits#validPairs.
   if (sounds.length > 1 && !traits$validPairs.call(this, sounds)) {
     return false;
   }
@@ -410,8 +569,8 @@ function traits$validPart() {
 
 // Checks whether the given sequence of sounds satisfies the criteria for a
 // complete word. This is defined as follows:
-//   1) the sequence satisfies the partial criteria per Traits.validPart();
-//   2) the sequence satisfies the complete criteria per Traits.checkPart().
+//   1) the sequence satisfies the partial criteria per Traits#validPart();
+//   2) the sequence satisfies the complete criteria per Traits#checkPart().
 function traits$validComplete() {
   for (var _len = arguments.length, sounds = Array(_len), _key = 0; _key < _len; _key++) {
     sounds[_key] = arguments[_key];
@@ -543,171 +702,6 @@ function traits$countVowels(sounds) {
 // Replacement sound set to use instead of the default `knownSounds`.
 
 // Replacement sound set to use instead of the default `knownVowels`.
-"use strict";
-
-/**
- * Defines known sounds.
- */
-
-// Glyphs and digraphs in common English use. This doesn't represent all common
-// phonemes.
-var knownSounds = new StringSet([
-// Digraphs
-"ae", "ch", "ng", "ph", "sh", "th", "zh",
-// ISO basic Latin monographs
-"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]);
-
-// Vowel glyphs and digraphs in common English use.
-var knownVowels = new StringSet([
-// Digraphs
-"ae",
-// ISO basic Latin monographs
-"a", "e", "i", "o", "u", "y"]);
-"use strict";
-
-var _toConsumableArray = function (arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } };
-
-var _prototypeProperties = function (child, staticProps, instanceProps) { if (staticProps) Object.defineProperties(child, staticProps); if (instanceProps) Object.defineProperties(child.prototype, instanceProps); };
-
-var _inherits = function (subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; };
-
-var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
-
-/*********************************** State ***********************************/
-
-var State = (function (_ref) {
-  function State(traits) {
-    _classCallCheck(this, State);
-
-    Traits.validate(traits);
-    this.traits = traits;
-    this.tree = new Tree();
-  }
-
-  _inherits(State, _ref);
-
-  _prototypeProperties(State, {
-    validate: {
-      value: function validate(value) {
-        if (!(value instanceof State)) {
-          throw new TypeError("expected a State object, got: " + value);
-        }
-      },
-      writable: true,
-      configurable: true
-    }
-  }, {
-    walk: {
-
-      // Walks the virtual tree of the state's traits, caching the visited parts in
-      // the state's inner tree. This caching lets us skip repeated
-      // Traits.validPart() checks, individual visited nodes, and fully visited
-      // subtrees. This significantly speeds up state.trip() traversals that restart
-      // from the root on each call, and lets us avoid revisiting nodes. This method
-      // also randomises the order of visiting subtrees from each node.
-
-      value: function walk(iterator) {
-        var _this = this;
-
-        var _tree;
-
-        for (var _len = arguments.length, sounds = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-          sounds[_key - 1] = arguments[_key];
-        }
-
-        // Find or create a matching node for this path. If it doesn't have child
-        // nodes yet, make a shallow map to track valid paths.
-        var node = (_tree = this.tree).at.apply(_tree, sounds);
-        if (node.nodes === null) {
-          var _Tree;
-
-          node.nodes = (_Tree = Tree).sprout.apply(_Tree, [this.traits.pairSet].concat(sounds));
-        }
-
-        // Loop over remaining child nodes and investigate their subtrees.
-        _.each(_.shuffle(_.keys(node.nodes)), function (sound) {
-          var _traits$validPart, _ref2;
-
-          var path = sounds.concat(sound);
-          // Invalidate the path if it doesn't qualify as a partial word.
-          if (!(_traits$validPart = traits$validPart).call.apply(_traits$validPart, [_this.traits].concat(_toConsumableArray(path)))) {
-            delete node.nodes[sound];
-            return;
-          }
-          // (1)(2) -> pre-order, (2)(1) -> post-order. Post-order is required by
-          // state.walkRandom(); it slows down state.Words() by about 10-15%, which
-          // doesn't warrant its own separate algorithm.
-          // (2) Continue recursively.
-          (_ref2 = _this).walk.apply(_ref2, [iterator].concat(_toConsumableArray(path)));
-          // (1) If this path hasn't yet been visited, feed it to the iterator.
-          if (!node.at(sound).visited) {
-            iterator.apply(undefined, _toConsumableArray(path));
-          }
-          // If this code is reached, the subtree is used up, so we forget about it.
-          delete node.nodes[sound];
-        });
-      },
-      writable: true,
-      configurable: true
-    },
-    walkRandom: {
-
-      // Walks the state's virtual tree; for each path given to the wrapper
-      // function, we visit its subpaths in random order, marking the corresponding
-      // nodes as visited. For the distribution to be random, the tree needs to be
-      // traversed in post-order. We only visit paths that qualify as valid complete
-      // words and haven't been visited before.
-
-      value: function walkRandom(iterator) {
-        var _this = this;
-
-        this.walk(function () {
-          for (var _len = arguments.length, sounds = Array(_len), _key = 0; _key < _len; _key++) {
-            sounds[_key] = arguments[_key];
-          }
-
-          _.each(_.shuffle(_.range(sounds.length)), function (index) {
-            var _tree;
-
-            if (!index) return;
-            var path = sounds.slice(0, index + 1);
-            var node = (_tree = _this.tree).at.apply(_tree, _toConsumableArray(path));
-            if (!node.visited) {
-              var _traits$checkPart;
-
-              node.visited = true;
-              if ((_traits$checkPart = traits$checkPart).call.apply(_traits$checkPart, [_this.traits].concat(_toConsumableArray(path)))) {
-                iterator.apply(undefined, _toConsumableArray(path));
-              }
-            }
-          });
-        });
-      },
-      writable: true,
-      configurable: true
-    },
-    trip: {
-      value: function trip(iterator) {
-        try {
-          this.walkRandom(function () {
-            for (var _len = arguments.length, sounds = Array(_len), _key = 0; _key < _len; _key++) {
-              sounds[_key] = arguments[_key];
-            }
-
-            iterator.apply(undefined, sounds);
-            throw null;
-          });
-        } catch (err) {
-          if (err !== null) throw err;
-        }
-      },
-      writable: true,
-      configurable: true
-    }
-  });
-
-  return State;
-})(null);
 "use strict";
 
 /********************************* Utilities *********************************/
