@@ -3,7 +3,7 @@
 Generator of random synthetic words or names. Port
 [`from Go`](https://github.com/Mitranim/codex). Takes sample words, analyses
 them, and lazily produces a set of similar derived words. Works for
-[any language](#traitsexamine--string-).
+[any language](#traitsexamine).
 
 Packaged in a format compatible with CommonJS / Node.js and AngularJS.
 
@@ -15,8 +15,8 @@ Packaged in a format compatible with CommonJS / Node.js and AngularJS.
 * [Usage](#usage)
 * [API Reference](#api-reference)
   * [Traits](#traits)
-    * [Traits#examine](#traitsexamine--string-)
-    * [Traits#generator](#traitsgenerator-----string-)
+    * [Traits#examine](#traitsexamine)
+    * [Traits#generator](#traitsgenerator)
 * [ToDo / WIP](#todo--wip)
 
 ## Installation
@@ -157,7 +157,7 @@ The `Traits` class is the package's entry point.
 
 ```javascript
 // Transcript of the constructor, using ES5 syntax for accessibility.
-function Traits(words /* : string[] */) {
+function Traits(words) {
   // Minimum and maximum number of sounds.
   this.minNSounds = 0
   this.maxNSounds = 0
@@ -187,7 +187,7 @@ traits object unequivocally defines a set of synthetic words that may be derived
 from it.
 
 The constructor optionally takes existing words as input and examines them with
-[`Traits#examine()`](#traitsexamine--string-). The resulting characteristics are assigned to the newly created Traits object. Words must consist of known glyphs, as
+[`Traits#examine()`](#traitsexamine). The resulting characteristics are assigned to the newly created Traits object. Words must consist of known glyphs, as
 defined by the default
 [sound sets](https://github.com/Mitranim/foliant/blob/master/src/index.js#L463)
 or by custom sets assigned to a traits object (see below). If an invalid word
@@ -197,7 +197,7 @@ The optional fields `knownSounds` and `knownVowels` specify custom sets of
 sounds and vowels. This lets you use `foliant` with any character set,
 including non-Latin alphabets.
 
-#### `Traits#examine(/* : string[] */)`
+#### `Traits#examine()`
 
 Analyses the given words and merges their characteristics into self.
 
@@ -245,7 +245,7 @@ for (var word = gen(); word != ''; word = gen()) {
 // ...
 ```
 
-#### `Traits#generator() /* : () => string */`
+#### `Traits#generator()`
 
 Creates a generator function that yields a new random synthetic word on each
 call. The words are guaranteed to never repeat, and to be randomly distributed
