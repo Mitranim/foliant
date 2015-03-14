@@ -56,6 +56,9 @@ var Traits = (function (_ref) {
       // Examines an array of words and merges their traits into self.
 
       value: function examine(words) {
+        if (!(words instanceof Array)) {
+          throw new TypeError("the argument to Traits#examine must be an array of strings");
+        }
         _.each(words, traits$examineWord.bind(this));
       },
       writable: true,
