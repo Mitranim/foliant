@@ -40,7 +40,7 @@ class Traits extends null {
     var state = new State(this)
     return function(): string {
       var result = ''
-      state.trip(function(...sounds: string[]) {result = sounds.join('')})
+      state.trip(function(sounds: string[]) {result = sounds.join('')})
       return result
     }
   }
@@ -96,7 +96,7 @@ function traits$examineWord(word: string) {
 //      of the sound pairs in the given traits;
 //   3) if there's at least one pair, the sequence of pairs must be valid as
 //      defined in Traits#validPairs.
-function traits$validPart(...sounds: string[]): boolean {
+function traits$validPart(sounds: string[]): boolean {
   // Check numeric criteria.
   if (traits$countVowels.call(this, sounds) > this.maxNVowels ||
       traits$maxConsequtiveVowels.call(this, sounds) > this.maxConseqVow ||
@@ -117,21 +117,13 @@ function traits$validPart(...sounds: string[]): boolean {
   return true
 }
 
-// Checks whether the given sequence of sounds satisfies the criteria for a
-// complete word. This is defined as follows:
-//   1) the sequence satisfies the partial criteria per Traits#validPart();
-//   2) the sequence satisfies the complete criteria per Traits#checkPart().
-function traits$validComplete(...sounds: string[]): boolean {
-  return traits$validPart.call(this, ...sounds) && traits$checkPart.call(this, ...sounds)
-}
-
 // Takes a valid partial word and checks if it's also a valid complete word,
 // using the following criteria:
 //   1) the number of vowels must fit within the bounds;
 //   2) the number of sounds must fit within the bounds.
 // The behaviour of this method for input values other than partial words is
 // undefined.
-function traits$checkPart(...sounds: string[]): boolean {
+function traits$validComplete(sounds: string[]): boolean {
   // Check vowel count.
   var nVow = traits$countVowels.call(this, sounds)
   if (nVow < this.minNVowels || nVow > this.maxNVowels) {
@@ -237,30 +229,31 @@ class State extends null {
   // subtrees. This significantly speeds up State#trip() traversals that restart
   // from the root on each call, and lets us avoid revisiting nodes. This method
   // also randomises the order of visiting subtrees from each node.
-  walk(iterator: (...sounds: string[]) => void, ...sounds: string[]) {
+  walk(iterator: Function, sounds: ?string[]) {
+    if (!(sounds instanceof Array)) sounds = []
 
     // Find or create a matching node for this path. If it doesn't have child
     // nodes yet, make a shallow map to track valid paths.
-    var node = this.tree.at(...sounds)
+    var node = this.tree.at(sounds)
     if (node.nodes === null) {
-      node.nodes = Tree.sprout(this.traits.pairSet, ...sounds)
+      node.nodes = Tree.sprout(this.traits.pairSet, sounds)
     }
 
     // Loop over remaining child nodes and investigate their subtrees.
     _.each(_.shuffle(_.keys(node.nodes)), sound => {
       var path = sounds.concat(sound)
       // Invalidate the path if it doesn't qualify as a partial word.
-      if (!traits$validPart.call(this.traits, ...path)) {
+      if (!traits$validPart.call(this.traits, path)) {
         delete node.nodes[sound]
         return
       }
       // (1)(2) -> pre-order, (2)(1) -> post-order. Post-order is required by
       // State#walkRandom().
       // (2) Continue recursively.
-      this.walk(iterator, ...path)
+      this.walk(iterator, path)
       // (1) If this path hasn't yet been visited, feed it to the iterator.
-      if (!node.at(sound).visited) {
-        iterator(...path)
+      if (!node.at([sound]).visited) {
+        iterator(path)
       }
       // If this code is reached, the subtree is used up, so we forget about it.
       delete node.nodes[sound]
@@ -272,26 +265,26 @@ class State extends null {
   // nodes as visited. For the distribution to be random, the tree needs to be
   // traversed in post-order. We only visit paths that qualify as valid complete
   // words and haven't been visited before.
-  walkRandom(iterator: (...sounds: string[]) => void) {
-    this.walk((...sounds: string[]) => {
+  walkRandom(iterator: Function) {
+    this.walk((sounds: string[]) => {
       _.each(_.shuffle(_.range(sounds.length)), index => {
         if (!index) return
         var path = sounds.slice(0, index + 1)
-        var node = this.tree.at(...path)
+        var node = this.tree.at(path)
         if (!node.visited) {
           node.visited = true
-          if (traits$checkPart.call(this.traits, ...path)) {
-            iterator(...path)
+          if (traits$validComplete.call(this.traits, path)) {
+            iterator(path)
           }
         }
       })
     })
   }
 
-  trip(iterator: (...sounds: string[]) => void) {
+  trip(iterator: Function) {
     try {
-      this.walkRandom((...sounds) => {
-        iterator(...sounds)
+      this.walkRandom((sounds: string[]) => {
+        iterator(sounds)
         throw null
       })
     } catch (err) {
@@ -311,7 +304,7 @@ class Tree extends null {
     this.visited = false
   }
 
-  at(...path: string[]): Tree {
+  at(path: string[]): Tree {
     var node = this
     _.each(path, value => {
       if (!node.nodes[value]) node.nodes[value] = new Tree()
@@ -321,7 +314,7 @@ class Tree extends null {
   }
 
   // Creates child nodes for a tree from the given pairs on the given path.
-  static sprout(pairs: PairSet, ...path: string[]): {} {
+  static sprout(pairs: PairSet, path: string[]): {} {
     var nodes = Object.create(null)
 
     // If no sound were passed, start from the root.

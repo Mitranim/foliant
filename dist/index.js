@@ -11,8 +11,6 @@
 
 var _slicedToArray = function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { var _arr = []; for (var _iterator = arr[Symbol.iterator](), _step; !(_step = _iterator.next()).done;) { _arr.push(_step.value); if (i && _arr.length === i) break; } return _arr; } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } };
 
-var _toConsumableArray = function (arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } };
-
 var _prototypeProperties = function (child, staticProps, instanceProps) { if (staticProps) Object.defineProperties(child, staticProps); if (instanceProps) Object.defineProperties(child.prototype, instanceProps); };
 
 var _inherits = function (subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; };
@@ -73,11 +71,7 @@ var Traits = (function (_ref) {
         var state = new State(this);
         return function () {
           var result = "";
-          state.trip(function () {
-            for (var _len = arguments.length, sounds = Array(_len), _key = 0; _key < _len; _key++) {
-              sounds[_key] = arguments[_key];
-            }
-
+          state.trip(function (sounds) {
             result = sounds.join("");
           });
           return result;
@@ -146,11 +140,7 @@ function traits$examineWord(word) {
 //      of the sound pairs in the given traits;
 //   3) if there's at least one pair, the sequence of pairs must be valid as
 //      defined in Traits#validPairs.
-function traits$validPart() {
-  for (var _len = arguments.length, sounds = Array(_len), _key = 0; _key < _len; _key++) {
-    sounds[_key] = arguments[_key];
-  }
-
+function traits$validPart(sounds) {
   // Check numeric criteria.
   if (traits$countVowels.call(this, sounds) > this.maxNVowels || traits$maxConsequtiveVowels.call(this, sounds) > this.maxConseqVow || traits$maxConsequtiveConsonants.call(this, sounds) > this.maxConseqCons) {
     return false;
@@ -173,29 +163,13 @@ function traits$validPart() {
   return true;
 }
 
-// Checks whether the given sequence of sounds satisfies the criteria for a
-// complete word. This is defined as follows:
-//   1) the sequence satisfies the partial criteria per Traits#validPart();
-//   2) the sequence satisfies the complete criteria per Traits#checkPart().
-function traits$validComplete() {
-  for (var _len = arguments.length, sounds = Array(_len), _key = 0; _key < _len; _key++) {
-    sounds[_key] = arguments[_key];
-  }
-
-  return traits$validPart.call.apply(traits$validPart, [this].concat(sounds)) && traits$checkPart.call.apply(traits$checkPart, [this].concat(sounds));
-}
-
 // Takes a valid partial word and checks if it's also a valid complete word,
 // using the following criteria:
 //   1) the number of vowels must fit within the bounds;
 //   2) the number of sounds must fit within the bounds.
 // The behaviour of this method for input values other than partial words is
 // undefined.
-function traits$checkPart() {
-  for (var _len = arguments.length, sounds = Array(_len), _key = 0; _key < _len; _key++) {
-    sounds[_key] = arguments[_key];
-  }
-
+function traits$validComplete(sounds) {
   // Check vowel count.
   var nVow = traits$countVowels.call(this, sounds);
   if (nVow < this.minNVowels || nVow > this.maxNVowels) {
@@ -315,39 +289,33 @@ var State = (function (_ref2) {
       // from the root on each call, and lets us avoid revisiting nodes. This method
       // also randomises the order of visiting subtrees from each node.
 
-      value: function walk(iterator) {
+      value: function walk(iterator, sounds) {
         var _this = this;
 
-        var _tree;
-
-        for (var _len = arguments.length, sounds = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-          sounds[_key - 1] = arguments[_key];
-        }
+        if (!(sounds instanceof Array)) sounds = [];
 
         // Find or create a matching node for this path. If it doesn't have child
         // nodes yet, make a shallow map to track valid paths.
-        var node = (_tree = this.tree).at.apply(_tree, sounds);
+        var node = this.tree.at(sounds);
         if (node.nodes === null) {
-          node.nodes = Tree.sprout.apply(Tree, [this.traits.pairSet].concat(sounds));
+          node.nodes = Tree.sprout(this.traits.pairSet, sounds);
         }
 
         // Loop over remaining child nodes and investigate their subtrees.
         _.each(_.shuffle(_.keys(node.nodes)), function (sound) {
-          var _ref6;
-
           var path = sounds.concat(sound);
           // Invalidate the path if it doesn't qualify as a partial word.
-          if (!traits$validPart.call.apply(traits$validPart, [_this.traits].concat(_toConsumableArray(path)))) {
+          if (!traits$validPart.call(_this.traits, path)) {
             delete node.nodes[sound];
             return;
           }
           // (1)(2) -> pre-order, (2)(1) -> post-order. Post-order is required by
           // State#walkRandom().
           // (2) Continue recursively.
-          (_ref6 = _this).walk.apply(_ref6, [iterator].concat(_toConsumableArray(path)));
+          _this.walk(iterator, path);
           // (1) If this path hasn't yet been visited, feed it to the iterator.
-          if (!node.at(sound).visited) {
-            iterator.apply(undefined, _toConsumableArray(path));
+          if (!node.at([sound]).visited) {
+            iterator(path);
           }
           // If this code is reached, the subtree is used up, so we forget about it.
           delete node.nodes[sound];
@@ -367,21 +335,15 @@ var State = (function (_ref2) {
       value: function walkRandom(iterator) {
         var _this = this;
 
-        this.walk(function () {
-          for (var _len = arguments.length, sounds = Array(_len), _key = 0; _key < _len; _key++) {
-            sounds[_key] = arguments[_key];
-          }
-
+        this.walk(function (sounds) {
           _.each(_.shuffle(_.range(sounds.length)), function (index) {
-            var _tree;
-
             if (!index) return;
             var path = sounds.slice(0, index + 1);
-            var node = (_tree = _this.tree).at.apply(_tree, _toConsumableArray(path));
+            var node = _this.tree.at(path);
             if (!node.visited) {
               node.visited = true;
-              if (traits$checkPart.call.apply(traits$checkPart, [_this.traits].concat(_toConsumableArray(path)))) {
-                iterator.apply(undefined, _toConsumableArray(path));
+              if (traits$validComplete.call(_this.traits, path)) {
+                iterator(path);
               }
             }
           });
@@ -393,12 +355,8 @@ var State = (function (_ref2) {
     trip: {
       value: function trip(iterator) {
         try {
-          this.walkRandom(function () {
-            for (var _len = arguments.length, sounds = Array(_len), _key = 0; _key < _len; _key++) {
-              sounds[_key] = arguments[_key];
-            }
-
-            iterator.apply(undefined, sounds);
+          this.walkRandom(function (sounds) {
+            iterator(sounds);
             throw null;
           });
         } catch (err) {
@@ -431,11 +389,7 @@ var Tree = (function (_ref3) {
 
       // Creates child nodes for a tree from the given pairs on the given path.
 
-      value: function sprout(pairs) {
-        for (var _len = arguments.length, path = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-          path[_key - 1] = arguments[_key];
-        }
-
+      value: function sprout(pairs, path) {
         var nodes = Object.create(null);
 
         // If no sound were passed, start from the root.
@@ -466,11 +420,7 @@ var Tree = (function (_ref3) {
     }
   }, {
     at: {
-      value: function at() {
-        for (var _len = arguments.length, path = Array(_len), _key = 0; _key < _len; _key++) {
-          path[_key] = arguments[_key];
-        }
-
+      value: function at(path) {
         var node = this;
         _.each(path, function (value) {
           if (!node.nodes[value]) node.nodes[value] = new Tree();
