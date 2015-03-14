@@ -1,7 +1,7 @@
 {
   "name": "foliant",
   "version": "0.0.1",
-  "description": "Generator of random synthetic words.",
+  "description": "Generator of random synthetic words or names.",
   "author": "Mitranim",
   "scripts": {
     "build": "gulp scripts",
@@ -15,7 +15,13 @@
     "type": "git",
     "url": "git://github.com/Mitranim/foliant.git"
   },
-  "keywords": [],
+  "keywords": [
+    "words",
+    "names",
+    "generator",
+    "random",
+    "synthetic"
+  ],
   "dependencies": {
     "lodash": "^3.5.0"
   },
