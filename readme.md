@@ -3,7 +3,7 @@
 Generator of random synthetic words or names. Port
 [`from Go`](https://github.com/Mitranim/codex). Takes sample words, analyses
 them, and lazily produces a set of similar derived words. Works for
-[any language](#traits-examine).
+[any language](#traitsexamine--string-).
 
 Packaged in a format compatible with CommonJS / Node.js and AngularJS.
 
@@ -15,8 +15,8 @@ Packaged in a format compatible with CommonJS / Node.js and AngularJS.
 * [Usage](#usage)
 * [API Reference](#api-reference)
   * [Traits](#traits)
-    * [Traits#examine](#traits-examine)
-    * [Traits#generator](#traits-generator)
+    * [Traits#examine](#traitsexamine--string-)
+    * [Traits#generator](#traitsgenerator-----string-)
 * [ToDo / WIP](#todo--wip)
 
 ## Installation
@@ -187,7 +187,7 @@ traits object unequivocally defines a set of synthetic words that may be derived
 from it.
 
 The constructor optionally takes existing words as input and examines them with
-[`Traits#examine()`](#traits-examine). The resulting characteristics are assigned to the newly created Traits object. Words must consist of known glyphs, as
+[`Traits#examine()`](#traitsexamine--string-). The resulting characteristics are assigned to the newly created Traits object. Words must consist of known glyphs, as
 defined by the default
 [sound sets](https://github.com/Mitranim/foliant/blob/master/src/index.js#L463)
 or by custom sets assigned to a traits object (see below). If an invalid word
