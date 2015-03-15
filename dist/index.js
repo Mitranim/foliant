@@ -59,7 +59,7 @@ var Traits = (function (_ref) {
         if (!(words instanceof Array)) {
           throw new TypeError("the argument to Traits#examine must be an array of strings");
         }
-        _.each(words, traits$examineWord.bind(this));
+        _.each(words, traits$examineWord, this);
       },
       writable: true,
       configurable: true
@@ -93,8 +93,6 @@ var Traits = (function (_ref) {
 // Takes a word, extracts its characteristics, and merges them into self. If the
 // word doesn't satisfy our limitations, returns an error.
 function traits$examineWord(word) {
-  var _this = this;
-
   assertString(word);
 
   // Validate the length.
@@ -126,14 +124,10 @@ function traits$examineWord(word) {
   this.maxConseqCons = Math.max(this.maxConseqCons, traits$maxConsequtiveConsonants.call(this, sounds));
 
   // Merge set of used sounds.
-  _.each(sounds, function (sound) {
-    return _this.soundSet.add(sound);
-  });
+  _.each(sounds, this.soundSet.add, this.soundSet);
 
   // Find set of pairs of sounds.
-  _.each(getPairs(sounds), function (pair) {
-    return _this.pairSet.add(pair);
-  });
+  _.each(getPairs(sounds), this.pairSet.add, this.pairSet);
 }
 
 // Checks whether the given combination of sounds satisfies the conditions for
@@ -445,13 +439,9 @@ var Tree = (function (_ref3) {
 
 var StringSet = (function (_ref4) {
   function StringSet(values) {
-    var _this = this;
-
     _classCallCheck(this, StringSet);
 
-    _.each(values, function (value) {
-      _this.add(value);
-    });
+    _.each(values, this.add, this);
   }
 
   _inherits(StringSet, _ref4);
@@ -489,13 +479,9 @@ var StringSet = (function (_ref4) {
 
 var PairSet = (function (Array) {
   function PairSet(pairs) {
-    var _this = this;
-
     _classCallCheck(this, PairSet);
 
-    _.each(pairs, function (pair) {
-      _this.add(pair);
-    });
+    _.each(pairs, this.add, this);
   }
 
   _inherits(PairSet, Array);

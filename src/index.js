@@ -33,7 +33,7 @@ class Traits extends null {
     if (!(words instanceof Array)) {
       throw new TypeError('the argument to Traits#examine must be an array of strings')
     }
-    _.each(words, traits$examineWord.bind(this))
+    _.each(words, traits$examineWord, this)
   }
 
   // Creates a generator function that returns a new word on each call. The
@@ -86,10 +86,10 @@ function traits$examineWord(word: string) {
   this.maxConseqCons = Math.max(this.maxConseqCons, traits$maxConsequtiveConsonants.call(this, sounds))
 
   // Merge set of used sounds.
-  _.each(sounds, sound => this.soundSet.add(sound))
+  _.each(sounds, this.soundSet.add, this.soundSet)
 
   // Find set of pairs of sounds.
-  _.each(getPairs(sounds), pair => this.pairSet.add(pair))
+  _.each(getPairs(sounds), this.pairSet.add, this.pairSet)
 }
 
 // Checks whether the given combination of sounds satisfies the conditions for
@@ -352,9 +352,7 @@ class Tree extends null {
 class StringSet extends null {
 
   constructor(values: string[]) {
-    _.each(values, value => {
-      this.add(value)
-    })
+    _.each(values, this.add, this)
   }
 
   has(value: string): boolean {return this[value] === null}
@@ -369,9 +367,7 @@ class StringSet extends null {
 class PairSet extends Array {
 
   constructor(pairs: ?Pair[]) {
-    _.each(pairs, pair => {
-      this.add(pair)
-    })
+    _.each(pairs, this.add, this)
   }
 
   has(pair: Pair): boolean {

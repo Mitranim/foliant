@@ -8,7 +8,8 @@
     "prepublish": "npm run build && npm test",
     "start": "gulp",
     "test": "env CODEX_ENV=testing jasmine-node tests",
-    "autotest": "env CODEX_ENV=testing jasmine-node --autotest tests --watch ./dist ./tests"
+    "autotest": "env CODEX_ENV=testing jasmine-node --autotest tests --watch ./dist ./tests",
+    "bench": "node bench/index.bench.js"
   },
   "main": "dist/index.js",
   "repository": {
