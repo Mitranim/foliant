@@ -59,7 +59,7 @@ var Traits = (function (_ref) {
         if (!(words instanceof Array)) {
           throw new TypeError("the argument to Traits#examine must be an array of strings");
         }
-        _.each(words, traits$examineWord, this);
+        words.forEach(traits$examineWord, this);
       },
       writable: true,
       configurable: true
@@ -124,10 +124,10 @@ function traits$examineWord(word) {
   this.maxConseqCons = Math.max(this.maxConseqCons, traits$maxConsequtiveConsonants.call(this, sounds));
 
   // Merge set of used sounds.
-  _.each(sounds, this.soundSet.add, this.soundSet);
+  sounds.forEach(this.soundSet.add, this.soundSet);
 
   // Find set of pairs of sounds.
-  _.each(getPairs(sounds), this.pairSet.add, this.pairSet);
+  getPairs(sounds).forEach(this.pairSet.add, this.pairSet);
 }
 
 // Checks whether the given combination of sounds satisfies the conditions for
@@ -236,7 +236,7 @@ function traits$maxConsequtiveVowels(sounds) {
   var count,
       max = 0;
   var known = this.knownVowels || knownVowels;
-  _.each(sounds, function (sound) {
+  sounds.forEach(function (sound) {
     if (!known.has(sound)) count = 0;else max = Math.max(max, ++count);
   });
   return max;
@@ -248,7 +248,7 @@ function traits$maxConsequtiveConsonants(sounds) {
   var count = 0;
   var max = 0;
   var known = this.knownVowels || knownVowels;
-  _.each(sounds, function (sound) {
+  sounds.forEach(function (sound) {
     if (known.has(sound)) count = 0;else max = Math.max(max, ++count);
   });
   return max;
@@ -256,12 +256,8 @@ function traits$maxConsequtiveConsonants(sounds) {
 
 // Counts how many sounds from the given sequence occur among own known vowels.
 function traits$countVowels(sounds) {
-  var count = 0;
   var known = this.knownVowels || knownVowels;
-  _.each(sounds, function (sound) {
-    if (known.has(sound)) count++;
-  });
-  return count;
+  return _.count(sounds, known.has, known);
 }
 
 /*********************************** State ***********************************/
@@ -299,7 +295,7 @@ var State = (function (_ref2) {
         }
 
         // Loop over remaining child nodes and investigate their subtrees.
-        _.each(_.shuffle(_.keys(node.nodes)), function (sound) {
+        _.shuffle(_.keys(node.nodes)).forEach(function (sound) {
           var path = sounds.concat(sound);
           // Invalidate the path if it doesn't qualify as a partial word.
           if (!traits$validPart.call(_this.traits, path)) {
@@ -311,9 +307,7 @@ var State = (function (_ref2) {
           // (2) Continue recursively.
           _this.walk(iterator, path);
           // (1) If this path hasn't yet been visited, feed it to the iterator.
-          if (!node.at([sound]).visited) {
-            iterator(path);
-          }
+          if (!node.at([sound]).visited) iterator(path);
           // If this code is reached, the subtree is used up, so we forget about it.
           delete node.nodes[sound];
         });
@@ -333,10 +327,12 @@ var State = (function (_ref2) {
         var _this = this;
 
         this.walk(function (sounds) {
-          _.each(_.shuffle(_.range(sounds.length)), function (index) {
+          _.shuffle(_.range(sounds.length)).forEach(function (index) {
             if (!index) return;
+
             var path = sounds.slice(0, index + 1);
             var node = _this.tree.at(path);
+
             if (!node.visited) {
               node.visited = true;
               if (traits$validComplete.call(_this.traits, path)) {
@@ -391,7 +387,7 @@ var Tree = (function (_ref3) {
 
         // If no sound were passed, start from the root.
         if (!path.length) {
-          _.each(pairs, function (pair) {
+          pairs.forEach(function (pair) {
             nodes[pair[0]] = nodes[pair[0]] || new Tree();
           });
         }
@@ -403,7 +399,7 @@ var Tree = (function (_ref3) {
           // preceding sounds. Their second sounds form a set that, when individually
           // appended to the preceding sounds, form foundation paths for child
           // subtrees. We register these second sounds on the child node map.
-          _.each(pairs, function (pair) {
+          pairs.forEach(function (pair) {
             if (pair[0] === path[path.length - 1]) {
               nodes[pair[1]] = new Tree();
             }
@@ -419,7 +415,7 @@ var Tree = (function (_ref3) {
     at: {
       value: function at(path) {
         var node = this;
-        _.each(path, function (value) {
+        path.forEach(function (value) {
           if (!node.nodes[value]) node.nodes[value] = new Tree();
           node = node.nodes[value];
         });
@@ -441,7 +437,7 @@ var StringSet = (function (_ref4) {
   function StringSet(values) {
     _classCallCheck(this, StringSet);
 
-    _.each(values, this.add, this);
+    if (values) values.forEach(this.add, this);
   }
 
   _inherits(StringSet, _ref4);
@@ -481,7 +477,7 @@ var PairSet = (function (Array) {
   function PairSet(pairs) {
     _classCallCheck(this, PairSet);
 
-    _.each(pairs, this.add, this);
+    if (pairs) pairs.forEach(this.add, this);
   }
 
   _inherits(PairSet, Array);
