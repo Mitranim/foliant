@@ -212,7 +212,9 @@ function traits$maxConsequtiveConsonants(sounds: string[]): number {
 // Counts how many sounds from the given sequence occur among own known vowels.
 function traits$countVowels(sounds: string[]): number {
   var known = this.knownVowels || knownVowels
-  return _.count(sounds, known.has, known)
+  var count = 0
+  sounds.forEach(sound => {if (known.has(sound)) count++})
+  return count
 }
 
 /*********************************** State ***********************************/

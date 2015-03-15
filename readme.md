@@ -91,7 +91,7 @@ veran
 // Find out how many words may be derived from this sample.
 var gen = traits.generator()
 i = 0
-while (gen() !== '') i++
+while (gen()) i++
 console.log(i)
 // -> 213
 ```
@@ -126,7 +126,7 @@ rinaren
 // Find out how many names may be derived from this sample.
 var gen = traits.generator()
 i = 0
-while (gen() !== '') i++
+while (gen()) i++
 console.log(i)
 // -> 431
 ```
@@ -265,7 +265,7 @@ var traits = new Traits(['goblin', 'smoke'])
 var gen = traits.generator()
 
 var words = [], word
-while ((word = gen()) !== '') words.push(word)
+while (word = gen()) words.push(word)
 
 console.log(words.join(' '))
 

@@ -257,7 +257,11 @@ function traits$maxConsequtiveConsonants(sounds) {
 // Counts how many sounds from the given sequence occur among own known vowels.
 function traits$countVowels(sounds) {
   var known = this.knownVowels || knownVowels;
-  return _.count(sounds, known.has, known);
+  var count = 0;
+  sounds.forEach(function (sound) {
+    if (known.has(sound)) count++;
+  });
+  return count;
 }
 
 /*********************************** State ***********************************/
