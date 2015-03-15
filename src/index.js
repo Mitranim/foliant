@@ -185,7 +185,8 @@ function traits$validPairs(sounds: string[]): boolean {
 // Returns the biggest number of consequtive vowels that occurs in the given
 // sound sequence.
 function traits$maxConsequtiveVowels(sounds: string[]): number {
-  var count, max = 0
+  var count = 0
+  var max = 0
   var known = this.knownVowels || knownVowels
   sounds.forEach(sound => {
     if (!known.has(sound)) count = 0

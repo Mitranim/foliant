@@ -128,7 +128,7 @@ var gen = traits.generator()
 i = 0
 while (gen()) i++
 console.log(i)
-// -> 431
+// -> 428
 ```
 
 To run tests, clone the repo, `cd` to its directory, run `npm i`, and use:
