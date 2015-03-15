@@ -220,7 +220,7 @@ function traits$validPairs(sounds) {
     }
 
     // Check for condition (3).
-    if (countPair(sounds.slice(0, index), prev, current) > 2) {
+    if (countPair(sounds.slice(0, index + 1), prev, current) > 2) {
       return false;
     }
 

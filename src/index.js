@@ -158,7 +158,7 @@ function traits$validPairs(sounds: string[]): boolean {
   // Loop over the sequence, checking each condition.
   var prev: string
   for (let index = 0; index < sounds.length; index++) {
-    let current = sounds[index]
+    let current: string = sounds[index]
     if (!index) {
       prev = current
       continue
@@ -168,13 +168,11 @@ function traits$validPairs(sounds: string[]): boolean {
 
     // Check for condition (2). This can only be done starting at index 3.
     if (index >= 3) {
-      if (secondLastPair === pair) {
-        return false
-      }
+      if (secondLastPair === pair) return false
     }
 
     // Check for condition (3).
-    if (countPair(sounds.slice(0, index), prev, current) > 2) {
+    if (countPair(sounds.slice(0, index + 1), prev, current) > 2) {
       return false
     }
 
