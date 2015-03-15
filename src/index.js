@@ -33,7 +33,7 @@ class Traits extends null {
     if (!(words instanceof Array)) {
       throw new TypeError('the argument to Traits#examine must be an array of strings')
     }
-    _.each(words, traits$examineWord, this)
+    words.forEach(traits$examineWord, this)
   }
 
   // Creates a generator function that returns a new word on each call. The
@@ -86,10 +86,10 @@ function traits$examineWord(word: string) {
   this.maxConseqCons = Math.max(this.maxConseqCons, traits$maxConsequtiveConsonants.call(this, sounds))
 
   // Merge set of used sounds.
-  _.each(sounds, this.soundSet.add, this.soundSet)
+  sounds.forEach(this.soundSet.add, this.soundSet)
 
   // Find set of pairs of sounds.
-  _.each(getPairs(sounds), this.pairSet.add, this.pairSet)
+  getPairs(sounds).forEach(this.pairSet.add, this.pairSet)
 }
 
 // Checks whether the given combination of sounds satisfies the conditions for
@@ -189,7 +189,7 @@ function traits$validPairs(sounds: string[]): boolean {
 function traits$maxConsequtiveVowels(sounds: string[]): number {
   var count, max = 0
   var known = this.knownVowels || knownVowels
-  _.each(sounds, sound => {
+  sounds.forEach(sound => {
     if (!known.has(sound)) count = 0
     else max = Math.max(max, ++count)
   })
@@ -202,7 +202,7 @@ function traits$maxConsequtiveConsonants(sounds: string[]): number {
   var count = 0
   var max = 0
   var known = this.knownVowels || knownVowels
-  _.each(sounds, sound => {
+  sounds.forEach(sound => {
     if (known.has(sound)) count = 0
     else max = Math.max(max, ++count)
   })
@@ -211,10 +211,8 @@ function traits$maxConsequtiveConsonants(sounds: string[]): number {
 
 // Counts how many sounds from the given sequence occur among own known vowels.
 function traits$countVowels(sounds: string[]): number {
-  var count = 0
   var known = this.knownVowels || knownVowels
-  _.each(sounds, sound => {if (known.has(sound)) count++})
-  return count
+  return _.count(sounds, known.has, known)
 }
 
 /*********************************** State ***********************************/
@@ -243,7 +241,7 @@ class State extends null {
     }
 
     // Loop over remaining child nodes and investigate their subtrees.
-    _.each(_.shuffle(_.keys(node.nodes)), sound => {
+    _.shuffle(_.keys(node.nodes)).forEach(sound => {
       var path = sounds.concat(sound)
       // Invalidate the path if it doesn't qualify as a partial word.
       if (!traits$validPart.call(this.traits, path)) {
@@ -255,9 +253,7 @@ class State extends null {
       // (2) Continue recursively.
       this.walk(iterator, path)
       // (1) If this path hasn't yet been visited, feed it to the iterator.
-      if (!node.at([sound]).visited) {
-        iterator(path)
-      }
+      if (!node.at([sound]).visited) iterator(path)
       // If this code is reached, the subtree is used up, so we forget about it.
       delete node.nodes[sound]
     })
@@ -270,10 +266,12 @@ class State extends null {
   // words and haven't been visited before.
   walkRandom(iterator: Function) {
     this.walk((sounds: string[]) => {
-      _.each(_.shuffle(_.range(sounds.length)), index => {
+      _.shuffle(_.range(sounds.length)).forEach(index => {
         if (!index) return
+
         var path = sounds.slice(0, index + 1)
         var node = this.tree.at(path)
+
         if (!node.visited) {
           node.visited = true
           if (traits$validComplete.call(this.traits, path)) {
@@ -309,7 +307,7 @@ class Tree extends null {
 
   at(path: string[]): Tree {
     var node = this
-    _.each(path, value => {
+    path.forEach(value => {
       if (!node.nodes[value]) node.nodes[value] = new Tree()
       node = node.nodes[value]
     })
@@ -322,7 +320,7 @@ class Tree extends null {
 
     // If no sound were passed, start from the root.
     if (!path.length) {
-      _.each(pairs, pair => {
+      pairs.forEach(pair => {
         nodes[pair[0]] = nodes[pair[0]] || new Tree()
       })
     }
@@ -334,7 +332,7 @@ class Tree extends null {
       // preceding sounds. Their second sounds form a set that, when individually
       // appended to the preceding sounds, form foundation paths for child
       // subtrees. We register these second sounds on the child node map.
-      _.each(pairs, pair => {
+      pairs.forEach(pair => {
         if (pair[0] === path[path.length - 1]) {
           nodes[pair[1]] = new Tree()
         }
@@ -351,8 +349,8 @@ class Tree extends null {
 // Behaves like a set of strings. Does not conform to the Set API.
 class StringSet extends null {
 
-  constructor(values: string[]) {
-    _.each(values, this.add, this)
+  constructor(values: ?string[]) {
+    if (values) values.forEach(this.add, this)
   }
 
   has(value: string): boolean {return this[value] === null}
@@ -367,7 +365,7 @@ class StringSet extends null {
 class PairSet extends Array {
 
   constructor(pairs: ?Pair[]) {
-    _.each(pairs, this.add, this)
+    if (pairs) pairs.forEach(this.add, this)
   }
 
   has(pair: Pair): boolean {
