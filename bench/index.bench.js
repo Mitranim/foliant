@@ -22,6 +22,11 @@ suite.add('Traits#examine', function() {
   var gen = traits.generator()
   _.times(defCount(), gen)
 })
+.add('Traits#examine() -> Traits#generator() -> all', function() {
+  var traits = new Traits(mockSourceWords())
+  var gen = traits.generator()
+  while (gen());
+})
 .on('cycle', function(event) {
   console.log(String(event.target))
 })

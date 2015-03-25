@@ -70,7 +70,7 @@ function traits$examineWord(word: string) {
     throw new Error('a word must have at least two sounds, found: ' + sounds)
   }
 
-  // Merge min and max number of consequtive sounds.
+  // Merge min and max total number of sounds.
   this.minNSounds = Math.min(this.minNSounds || sounds.length, sounds.length)
   this.maxNSounds = Math.max(this.maxNSounds, sounds.length)
 
