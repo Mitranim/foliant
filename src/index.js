@@ -1,35 +1,121 @@
-/********************************** Traits ***********************************/
+/* global _ */
 
-/*--------------------------------- Public ----------------------------------*/
+/**
+ * Style per http://standardjs.com
+ */
 
-class Traits extends null {
+/** ******************************** Pair ************************************/
 
-  constructor(words: ?string[]) {
-    // Minimum and maximum number of sounds.
-    this.minNSounds = 0
-    this.maxNSounds = 0
-    // Minimum and maximum number of vowels.
-    this.minNVowels = 0
-    this.maxNVowels = 0
-    // Maximum number of consequtive vowels.
-    this.maxConseqVow = 0
-    // Maximum number of consequtive consonants.
-    this.maxConseqCons = 0
-    // Set of sounds that occur in the words.
-    this.soundSet = new StringSet()
-    // Set of pairs of sounds that occur in the words.
-    this.pairSet = new PairSet()
+// Pair of strings.
+class Pair {
 
-    // Replacement sound set to use instead of the default `knownSounds`.
-    this.knownSounds = null
-    // Replacement sound set to use instead of the default `knownVowels`.
-    this.knownVowels = null
+  constructor (one: string, two: string) {
+    assertString(one)
+    assertString(two)
+    this[0] = one
+    this[1] = two
+  }
 
+}
+
+/** ****************************** StringSet *********************************/
+
+// Behaves like a set of strings.
+class StringSet {
+
+  constructor (values: ?string[]) {
+    if (values) values.forEach(this.add, this)
+  }
+
+  has (value: string) {return this[value] === null}
+  add (value: string) {this[value] = null}
+  del (value: string) {delete this[value]}
+
+}
+
+/** ******************************* PairSet **********************************/
+
+// Behaves like a set of pairs of strings. Does not conform to the Set API.
+class PairSet extends Array {
+
+  constructor (pairs: ?Pair[]) {
+    super()
+    if (pairs) pairs.forEach(this.add, this)
+  }
+
+  has (pair: Pair) {
+    return _.any(this, existing => {
+      return pair[0] === existing[0] && pair[1] === existing[1]
+    })
+  }
+
+  add (pair: Pair) {
+    if (!this.has(pair)) this.push(pair)
+  }
+
+  del (pair: Pair) {
+    _.remove(this, existing => {
+      return pair[0] === existing[0] && pair[1] === existing[1]
+    })
+  }
+
+}
+
+/** ****************************** Constants *********************************/
+
+// Glyphs and digraphs in common English use. This doesn't represent all common
+// phonemes.
+const knownSounds = new StringSet([
+  // Digraphs
+  'ae', 'ch', 'ng', 'ph', 'sh', 'th', 'zh',
+  // ISO basic Latin monographs
+  'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+  'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
+])
+
+// Vowel glyphs and digraphs in common English use.
+const knownVowels = new StringSet([
+  // Digraphs
+  'ae',
+  // ISO basic Latin monographs
+  'a', 'e', 'i', 'o', 'u', 'y'
+])
+
+/** ******************************* Traits ***********************************/
+
+/* -------------------------------- Public ----------------------------------*/
+
+class Traits {
+
+  // Minimum and maximum number of sounds.
+  minNSounds = 0
+  maxNSounds = 0
+
+  // Minimum and maximum number of vowels.
+  minNVowels = 0
+  maxNVowels = 0
+
+  // Maximum number of consequtive vowels.
+  maxConseqVow = 0
+  // Maximum number of consequtive consonants.
+  maxConseqCons = 0
+
+  // Set of sounds that occur in the words.
+  soundSet = new StringSet()
+  // Set of pairs of sounds that occur in the words.
+  pairSet = new PairSet()
+
+  // Replacement sound set to use instead of the default `knownSounds`.
+  knownSounds = null
+  // Replacement sound set to use instead of the default `knownVowels`.
+  knownVowels = null
+
+  constructor (words: ?string[]) {
     if (words instanceof Array) this.examine(words)
   }
 
   // Examines an array of words and merges their traits into self.
-  examine(words: string[]) {
+  examine (words: string[]) {
     if (!(words instanceof Array)) {
       throw new TypeError('the argument to Traits#examine must be an array of strings')
     }
@@ -39,22 +125,22 @@ class Traits extends null {
   // Creates a generator function that returns a new word on each call. The
   // words are guaranteed to never repeat and be randomly distributed in the
   // traits' word set. When the set is exhausted, further calls return "".
-  generator() {
-    var state = new State(this)
-    return function(): string {
-      var result = ''
-      state.trip(function(sounds: string[]) {result = sounds.join('')})
+  generator () {
+    const state = new State(this)
+    return function (): string {
+      let result = ''
+      state.trip((sounds: string[]) => {result = sounds.join('')})
       return result
     }
   }
 
 }
 
-/*--------------------------------- Private ---------------------------------*/
+/* -------------------------------- Private ---------------------------------*/
 
 // Takes a word, extracts its characteristics, and merges them into self. If the
 // word doesn't satisfy our limitations, returns an error.
-function traits$examineWord(word: string) {
+function traits$examineWord (word: string) {
   assertString(word)
 
   // Validate the length.
@@ -63,7 +149,7 @@ function traits$examineWord(word: string) {
   }
 
   // Split into sounds.
-  var sounds = getSounds(word, this.knownSounds || knownSounds)
+  const sounds = getSounds(word, this.knownSounds || knownSounds)
 
   // Mandate at least two sounds.
   if (sounds.length < 2) {
@@ -75,7 +161,7 @@ function traits$examineWord(word: string) {
   this.maxNSounds = Math.max(this.maxNSounds, sounds.length)
 
   // Merge min and max total number of vowels.
-  var nVow = traits$countVowels.call(this, sounds)
+  const nVow = traits$countVowels.call(this, sounds)
   this.minNVowels = Math.min(this.minNVowels || nVow, nVow)
   this.maxNVowels = Math.max(this.maxNVowels, nVow)
 
@@ -99,7 +185,7 @@ function traits$examineWord(word: string) {
 //      of the sound pairs in the given traits;
 //   3) if there's at least one pair, the sequence of pairs must be valid as
 //      defined in Traits#validPairs.
-function traits$validPart(sounds: string[]): boolean {
+function traits$validPart (sounds: string[]): boolean {
   // Check numeric criteria.
   if (traits$countVowels.call(this, sounds) > this.maxNVowels ||
       traits$maxConsequtiveVowels.call(this, sounds) > this.maxConseqVow ||
@@ -126,9 +212,9 @@ function traits$validPart(sounds: string[]): boolean {
 //   2) the number of sounds must fit within the bounds.
 // The behaviour of this method for input values other than partial words is
 // undefined.
-function traits$validComplete(sounds: string[]): boolean {
+function traits$validComplete (sounds: string[]): boolean {
   // Check vowel count.
-  var nVow = traits$countVowels.call(this, sounds)
+  const nVow = traits$countVowels.call(this, sounds)
   if (nVow < this.minNVowels || nVow > this.maxNVowels) {
     return false
   }
@@ -146,17 +232,17 @@ function traits$validComplete(sounds: string[]): boolean {
 //      skip this check to save performance;
 //   2) no sound pair immediately follows itself (e.g. "tata" in "ratatater");
 //   3) no sound pair occurs more than twice.
-function traits$validPairs(sounds: string[]): boolean {
+function traits$validPairs (sounds: string[]): boolean {
   if (sounds.length < 2) return true
 
   // Variables to keep track of the last three pairs, up to current. This is
   // used for checking condition (2).
-  var secondLastPair: Pair
-  var lastPair: Pair
-  var pair: Pair
+  let secondLastPair: Pair
+  let lastPair: Pair
+  let pair: Pair
 
   // Loop over the sequence, checking each condition.
-  var prev: string
+  let prev: string
   for (let index = 0; index < sounds.length; index++) {
     let current: string = sounds[index]
     if (!index) {
@@ -184,10 +270,10 @@ function traits$validPairs(sounds: string[]): boolean {
 
 // Returns the biggest number of consequtive vowels that occurs in the given
 // sound sequence.
-function traits$maxConsequtiveVowels(sounds: string[]): number {
-  var count = 0
-  var max = 0
-  var known = this.knownVowels || knownVowels
+function traits$maxConsequtiveVowels (sounds: string[]): number {
+  let count = 0
+  let max = 0
+  const known = this.knownVowels || knownVowels
   sounds.forEach(sound => {
     if (!known.has(sound)) count = 0
     else max = Math.max(max, ++count)
@@ -197,10 +283,10 @@ function traits$maxConsequtiveVowels(sounds: string[]): number {
 
 // Returns the biggest number of consequtive consonants that occurs in the given
 // sound sequence.
-function traits$maxConsequtiveConsonants(sounds: string[]): number {
-  var count = 0
-  var max = 0
-  var known = this.knownVowels || knownVowels
+function traits$maxConsequtiveConsonants (sounds: string[]): number {
+  let count = 0
+  let max = 0
+  const known = this.knownVowels || knownVowels
   sounds.forEach(sound => {
     if (known.has(sound)) count = 0
     else max = Math.max(max, ++count)
@@ -209,20 +295,21 @@ function traits$maxConsequtiveConsonants(sounds: string[]): number {
 }
 
 // Counts how many sounds from the given sequence occur among own known vowels.
-function traits$countVowels(sounds: string[]): number {
-  var known = this.knownVowels || knownVowels
-  var count = 0
+function traits$countVowels (sounds: string[]): number {
+  const known = this.knownVowels || knownVowels
+  let count = 0
   sounds.forEach(sound => {if (known.has(sound)) count++})
   return count
 }
 
-/*********************************** State ***********************************/
+/** ******************************** State ***********************************/
 
-class State extends null {
+class State {
 
-  constructor(traits: Traits) {
+  tree = new Tree()
+
+  constructor (traits: Traits) {
     this.traits = traits
-    this.tree = new Tree()
   }
 
   // Walks the virtual tree of the state's traits, caching the visited parts in
@@ -231,19 +318,19 @@ class State extends null {
   // subtrees. This significantly speeds up State#trip() traversals that restart
   // from the root on each call, and lets us avoid revisiting nodes. This method
   // also randomises the order of visiting subtrees from each node.
-  walk(iterator: Function, sounds: ?string[]) {
+  walk (iterator: Function, sounds: ?string[]) {
     if (!(sounds instanceof Array)) sounds = []
 
     // Find or create a matching node for this path. If it doesn't have child
     // nodes yet, make a shallow map to track valid paths.
-    var node = this.tree.at(sounds)
+    const node = this.tree.at(sounds)
     if (node.nodes === null) {
       node.nodes = Tree.sprout(this.traits.pairSet, sounds)
     }
 
     // Loop over remaining child nodes and investigate their subtrees.
     _.shuffle(_.keys(node.nodes)).forEach(sound => {
-      var path = sounds.concat(sound)
+      const path = sounds.concat(sound)
       // Invalidate the path if it doesn't qualify as a partial word.
       if (!traits$validPart.call(this.traits, path)) {
         delete node.nodes[sound]
@@ -265,13 +352,13 @@ class State extends null {
   // nodes as visited. For the distribution to be random, the tree needs to be
   // traversed in post-order. We only visit paths that qualify as valid complete
   // words and haven't been visited before.
-  walkRandom(iterator: Function) {
+  walkRandom (iterator: Function) {
     this.walk((sounds: string[]) => {
       _.shuffle(_.range(sounds.length)).forEach(index => {
         if (!index) return
 
-        var path = sounds.slice(0, index + 1)
-        var node = this.tree.at(path)
+        const path = sounds.slice(0, index + 1)
+        const node = this.tree.at(path)
 
         if (!node.visited) {
           node.visited = true
@@ -283,11 +370,11 @@ class State extends null {
     })
   }
 
-  trip(iterator: Function) {
+  trip (iterator: Function) {
     try {
       this.walkRandom((sounds: string[]) => {
         iterator(sounds)
-        throw null
+        throw null // eslint-disable-line
       })
     } catch (err) {
       if (err !== null) throw err
@@ -296,18 +383,16 @@ class State extends null {
 
 }
 
-/*********************************** Tree ************************************/
+/** ******************************** Tree ************************************/
 
-class Tree extends null {
+class Tree {
 
-  constructor() {
-    // Map of strings to Tree objects. Keys represent node values (sounds).
-    this.nodes = null
-    this.visited = false
-  }
+  // Map of strings to Tree objects. Keys represent node values (sounds).
+  nodes = null
+  visited = false
 
-  at(path: string[]): Tree {
-    var node = this
+  at (path: string[]): Tree {
+    let node = this
     path.forEach(value => {
       if (!node.nodes[value]) node.nodes[value] = new Tree()
       node = node.nodes[value]
@@ -316,17 +401,16 @@ class Tree extends null {
   }
 
   // Creates child nodes for a tree from the given pairs on the given path.
-  static sprout(pairs: PairSet, path: string[]): {} {
-    var nodes = Object.create(null)
+  static sprout (pairs: PairSet, path: string[]): {} {
+    const nodes = Object.create(null)
 
     // If no sound were passed, start from the root.
     if (!path.length) {
       pairs.forEach(pair => {
         nodes[pair[0]] = nodes[pair[0]] || new Tree()
       })
-    }
-    // Otherwise continue from the given path.
-    else {
+    } else {
+      // Otherwise continue from the given path.
       // [ ... sounds ... ( last sound ] <- pair -> next sound )
       //
       // We investigate pairs that begin with the last sound of the given
@@ -345,72 +429,16 @@ class Tree extends null {
 
 }
 
-/********************************* StringSet *********************************/
-
-// Behaves like a set of strings. Does not conform to the Set API.
-class StringSet extends null {
-
-  constructor(values: ?string[]) {
-    if (values) values.forEach(this.add, this)
-  }
-
-  has(value: string): boolean {return this[value] === null}
-  add(value: string) {this[value] = null}
-  del(value: string) {delete this[value]}
-
-}
-
-/********************************** PairSet **********************************/
-
-// Behaves like a set of pairs of strings. Does not conform to the Set API.
-class PairSet extends Array {
-
-  constructor(pairs: ?Pair[]) {
-    if (pairs) pairs.forEach(this.add, this)
-  }
-
-  has(pair: Pair): boolean {
-    return _.any(this, existing => {
-      return pair[0] === existing[0] && pair[1] === existing[1]
-    })
-  }
-
-  add(pair: Pair) {
-    if (!this.has(pair)) this.push(pair)
-  }
-
-  del(pair: Pair) {
-    _.remove(this, existing => {
-      return pair[0] === existing[0] && pair[1] === existing[1]
-    })
-  }
-
-}
-
-/*********************************** Pair ************************************/
-
-// Pair of strings.
-class Pair extends null {
-
-  constructor(one: string, two: string) {
-    assertString(one)
-    assertString(two)
-    this[0] = one
-    this[1] = two
-  }
-
-}
-
-/********************************* Utilities *********************************/
+/** ****************************** Utilities *********************************/
 
 // Takes a word and splits it into a series of known glyphs representing sounds.
-function getSounds(word: string, known: StringSet): string[] {
-  var sounds = []
+function getSounds (word: string, known: StringSet): string[] {
+  const sounds = []
 
   // Loop over the word, matching known glyphs. Break if no match is found.
   for (let i = 0; i < word.length; i++) {
     // Check for a known digraph.
-    var digraph = word[i] + word[i+1]
+    const digraph = word[i] + word[i + 1]
     if (digraph.length > 1 && known.has(digraph)) {
       sounds.push(digraph)
       i++
@@ -428,8 +456,8 @@ function getSounds(word: string, known: StringSet): string[] {
 
 // Takes a sequence of sounds and returns the set of consequtive pairs that
 // occur in it.
-function getPairs(sounds: string[]): PairSet {
-  var pairs = new PairSet()
+function getPairs (sounds: string[]): PairSet {
+  const pairs = new PairSet()
   for (let i = 0; i < sounds.length - 1; i++) {
     pairs.add(new Pair(sounds[i], sounds[i + 1]))
   }
@@ -437,9 +465,9 @@ function getPairs(sounds: string[]): PairSet {
 }
 
 // Counts the occurrences of the given pair of strings in the given sequence.
-function countPair(strings: string[], prev: string, current: string): number {
-  var count = 0
-  var ownPrev: string
+function countPair (strings: string[], prev: string, current: string): number {
+  let count = 0
+  let ownPrev: string
   for (let index = 0; index < strings.length; index++) {
     let ownCurrent = strings[index]
     if (!index) {
@@ -452,28 +480,8 @@ function countPair(strings: string[], prev: string, current: string): number {
 }
 
 // Asserts that the given value is a string.
-function assertString(value: ?string) {
+function assertString (value: ?string) {
   if (typeof value !== 'string') {
     throw new TypeError('expected a string, got: ' + value)
   }
 }
-
-/******************************* Known Sounds ********************************/
-
-// Glyphs and digraphs in common English use. This doesn't represent all common
-// phonemes.
-const knownSounds = new StringSet([
-  // Digraphs
-  'ae', 'ch', 'ng', 'ph', 'sh', 'th', 'zh',
-  // ISO basic Latin monographs
-  'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-  'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
-])
-
-// Vowel glyphs and digraphs in common English use.
-const knownVowels = new StringSet([
-  // Digraphs
-  'ae',
-  // ISO basic Latin monographs
-  'a', 'e', 'i', 'o', 'u', 'y'
-])

@@ -1,103 +1,194 @@
 (function(factory) {
-    if (typeof module !== 'undefined' && module.exports) {
-      factory(module, require('lodash'));
-    } else if (typeof angular !== 'undefined' && angular.module) {
-      var mod = {exports: {}}
-      factory(mod, window._);
-      angular.module('foliant', []).value('Traits', mod.exports);
+  if (typeof module !== 'undefined' && module.exports) {
+    factory(module, require('lodash'));
+  } else if (typeof angular !== 'undefined' && angular.module) {
+    var mod = {exports: {}}
+    factory(mod, window._);
+    angular.module('foliant', []).value('Traits', mod.exports);
+  }
+})(function(module, _) {
+  /* global _ */
+
+/**
+ * Style per http://standardjs.com
+ */
+
+/** ******************************** Pair ************************************/
+
+// Pair of strings.
+'use strict';
+
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _defaults(obj, defaults) { var keys = Object.getOwnPropertyNames(defaults); for (var i = 0; i < keys.length; i++) { var key = keys[i]; var value = Object.getOwnPropertyDescriptor(defaults, key); if (value && value.configurable && obj[key] === undefined) { Object.defineProperty(obj, key, value); } } return obj; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : _defaults(subClass, superClass); }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+var Pair = function Pair(one, two) {
+  _classCallCheck(this, Pair);
+
+  assertString(one);
+  assertString(two);
+  this[0] = one;
+  this[1] = two;
+}
+
+/** ****************************** StringSet *********************************/
+
+// Behaves like a set of strings.
+;
+
+var StringSet = (function () {
+  function StringSet(values) {
+    _classCallCheck(this, StringSet);
+
+    if (values) values.forEach(this.add, this);
+  }
+
+  /** ******************************* PairSet **********************************/
+
+  // Behaves like a set of pairs of strings. Does not conform to the Set API.
+
+  _createClass(StringSet, [{
+    key: 'has',
+    value: function has(value) {
+      return this[value] === null;
     }
-  })(function(module, _) {
-    "use strict";
+  }, {
+    key: 'add',
+    value: function add(value) {
+      this[value] = null;
+    }
+  }, {
+    key: 'del',
+    value: function del(value) {
+      delete this[value];
+    }
+  }]);
 
-var _slicedToArray = function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { var _arr = []; for (var _iterator = arr[Symbol.iterator](), _step; !(_step = _iterator.next()).done;) { _arr.push(_step.value); if (i && _arr.length === i) break; } return _arr; } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } };
+  return StringSet;
+})();
 
-var _prototypeProperties = function (child, staticProps, instanceProps) { if (staticProps) Object.defineProperties(child, staticProps); if (instanceProps) Object.defineProperties(child.prototype, instanceProps); };
+var PairSet = (function (_Array) {
+  _inherits(PairSet, _Array);
 
-var _inherits = function (subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; };
+  function PairSet(pairs) {
+    _classCallCheck(this, PairSet);
 
-var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
+    _get(Object.getPrototypeOf(PairSet.prototype), 'constructor', this).call(this);
+    if (pairs) pairs.forEach(this.add, this);
+  }
 
-/********************************** Traits ***********************************/
+  /** ****************************** Constants *********************************/
 
-/*--------------------------------- Public ----------------------------------*/
+  // Glyphs and digraphs in common English use. This doesn't represent all common
+  // phonemes.
 
-var Traits = (function (_ref) {
+  _createClass(PairSet, [{
+    key: 'has',
+    value: function has(pair) {
+      return _.any(this, function (existing) {
+        return pair[0] === existing[0] && pair[1] === existing[1];
+      });
+    }
+  }, {
+    key: 'add',
+    value: function add(pair) {
+      if (!this.has(pair)) this.push(pair);
+    }
+  }, {
+    key: 'del',
+    value: function del(pair) {
+      _.remove(this, function (existing) {
+        return pair[0] === existing[0] && pair[1] === existing[1];
+      });
+    }
+  }]);
+
+  return PairSet;
+})(Array);
+
+var knownSounds = new StringSet([
+// Digraphs
+'ae', 'ch', 'ng', 'ph', 'sh', 'th', 'zh',
+// ISO basic Latin monographs
+'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']);
+
+// Vowel glyphs and digraphs in common English use.
+var knownVowels = new StringSet([
+// Digraphs
+'ae',
+// ISO basic Latin monographs
+'a', 'e', 'i', 'o', 'u', 'y']);
+
+/** ******************************* Traits ***********************************/
+
+/* -------------------------------- Public ----------------------------------*/
+
+var Traits = (function () {
   function Traits(words) {
     _classCallCheck(this, Traits);
 
-    // Minimum and maximum number of sounds.
     this.minNSounds = 0;
     this.maxNSounds = 0;
-    // Minimum and maximum number of vowels.
     this.minNVowels = 0;
     this.maxNVowels = 0;
-    // Maximum number of consequtive vowels.
     this.maxConseqVow = 0;
-    // Maximum number of consequtive consonants.
     this.maxConseqCons = 0;
-    // Set of sounds that occur in the words.
     this.soundSet = new StringSet();
-    // Set of pairs of sounds that occur in the words.
     this.pairSet = new PairSet();
-
-    // Replacement sound set to use instead of the default `knownSounds`.
     this.knownSounds = null;
-    // Replacement sound set to use instead of the default `knownVowels`.
     this.knownVowels = null;
 
     if (words instanceof Array) this.examine(words);
   }
 
-  _inherits(Traits, _ref);
+  /* -------------------------------- Private ---------------------------------*/
 
-  _prototypeProperties(Traits, null, {
-    examine: {
+  // Takes a word, extracts its characteristics, and merges them into self. If the
+  // word doesn't satisfy our limitations, returns an error.
 
-      // Examines an array of words and merges their traits into self.
+  // Examines an array of words and merges their traits into self.
 
-      value: function examine(words) {
-        if (!(words instanceof Array)) {
-          throw new TypeError("the argument to Traits#examine must be an array of strings");
-        }
-        words.forEach(traits$examineWord, this);
-      },
-      writable: true,
-      configurable: true
-    },
-    generator: {
-
-      // Creates a generator function that returns a new word on each call. The
-      // words are guaranteed to never repeat and be randomly distributed in the
-      // traits' word set. When the set is exhausted, further calls return "".
-
-      value: function generator() {
-        var state = new State(this);
-        return function () {
-          var result = "";
-          state.trip(function (sounds) {
-            result = sounds.join("");
-          });
-          return result;
-        };
-      },
-      writable: true,
-      configurable: true
+  _createClass(Traits, [{
+    key: 'examine',
+    value: function examine(words) {
+      if (!(words instanceof Array)) {
+        throw new TypeError('the argument to Traits#examine must be an array of strings');
+      }
+      words.forEach(traits$examineWord, this);
     }
-  });
+
+    // Creates a generator function that returns a new word on each call. The
+    // words are guaranteed to never repeat and be randomly distributed in the
+    // traits' word set. When the set is exhausted, further calls return "".
+  }, {
+    key: 'generator',
+    value: function generator() {
+      var state = new State(this);
+      return function () {
+        var result = '';
+        state.trip(function (sounds) {
+          result = sounds.join('');
+        });
+        return result;
+      };
+    }
+  }]);
 
   return Traits;
-})(null);
+})();
 
-/*--------------------------------- Private ---------------------------------*/
-
-// Takes a word, extracts its characteristics, and merges them into self. If the
-// word doesn't satisfy our limitations, returns an error.
 function traits$examineWord(word) {
   assertString(word);
 
   // Validate the length.
   if (word.length < 2 && word.length > 32) {
-    throw new Error("the word is too short or too long");
+    throw new Error('the word is too short or too long');
   }
 
   // Split into sounds.
@@ -105,10 +196,10 @@ function traits$examineWord(word) {
 
   // Mandate at least two sounds.
   if (sounds.length < 2) {
-    throw new Error("a word must have at least two sounds, found: " + sounds);
+    throw new Error('a word must have at least two sounds, found: ' + sounds);
   }
 
-  // Merge min and max number of consequtive sounds.
+  // Merge min and max total number of sounds.
   this.minNSounds = Math.min(this.minNSounds || sounds.length, sounds.length);
   this.maxNSounds = Math.max(this.maxNSounds, sounds.length);
 
@@ -147,9 +238,7 @@ function traits$validPart(sounds) {
   if (sounds.length === 1) {
     if (_.any(this.pairSet, function (pair) {
       return pair[0] === sounds[0];
-    })) {
-      return true;
-    }
+    })) return true;
   }
 
   // Check if the pair sequence is valid per Traits#validPairs.
@@ -187,16 +276,16 @@ function traits$validComplete(sounds) {
 //   2) no sound pair immediately follows itself (e.g. "tata" in "ratatater");
 //   3) no sound pair occurs more than twice.
 function traits$validPairs(sounds) {
-  if (sounds.length < 2) {
-    return true;
-  } // Variables to keep track of the last three pairs, up to current. This is
+  if (sounds.length < 2) return true;
+
+  // Variables to keep track of the last three pairs, up to current. This is
   // used for checking condition (2).
-  var secondLastPair;
-  var lastPair;
-  var pair;
+  var secondLastPair = undefined;
+  var lastPair = undefined;
+  var pair = undefined;
 
   // Loop over the sequence, checking each condition.
-  var prev;
+  var prev = undefined;
   for (var index = 0; index < sounds.length; index++) {
     var current = sounds[index];
     if (!index) {
@@ -204,19 +293,13 @@ function traits$validPairs(sounds) {
       continue;
     }
 
-    var _ref6 = [lastPair, pair, new Pair(prev, current)];
-
-    var _ref62 = _slicedToArray(_ref6, 3);
-
-    secondLastPair = _ref62[0];
-    lastPair = _ref62[1];
-    pair = _ref62[2];
-
     // Check for condition (2). This can only be done starting at index 3.
+    var _ref = [lastPair, pair, new Pair(prev, current)];
+    secondLastPair = _ref[0];
+    lastPair = _ref[1];
+    pair = _ref[2];
     if (index >= 3) {
-      if (secondLastPair === pair) {
-        return false;
-      }
+      if (secondLastPair === pair) return false;
     }
 
     // Check for condition (3).
@@ -264,281 +347,158 @@ function traits$countVowels(sounds) {
   return count;
 }
 
-/*********************************** State ***********************************/
+/** ******************************** State ***********************************/
 
-var State = (function (_ref2) {
+var State = (function () {
   function State(traits) {
     _classCallCheck(this, State);
 
-    this.traits = traits;
     this.tree = new Tree();
+
+    this.traits = traits;
   }
 
-  _inherits(State, _ref2);
+  /** ******************************** Tree ************************************/
 
-  _prototypeProperties(State, null, {
-    walk: {
+  // Walks the virtual tree of the state's traits, caching the visited parts in
+  // the state's inner tree. This caching lets us skip repeated
+  // Traits#validPart() checks, individual visited nodes, and fully visited
+  // subtrees. This significantly speeds up State#trip() traversals that restart
+  // from the root on each call, and lets us avoid revisiting nodes. This method
+  // also randomises the order of visiting subtrees from each node.
 
-      // Walks the virtual tree of the state's traits, caching the visited parts in
-      // the state's inner tree. This caching lets us skip repeated
-      // Traits#validPart() checks, individual visited nodes, and fully visited
-      // subtrees. This significantly speeds up State#trip() traversals that restart
-      // from the root on each call, and lets us avoid revisiting nodes. This method
-      // also randomises the order of visiting subtrees from each node.
+  _createClass(State, [{
+    key: 'walk',
+    value: function walk(iterator, sounds) {
+      var _this = this;
 
-      value: function walk(iterator, sounds) {
-        var _this = this;
+      if (!(sounds instanceof Array)) sounds = [];
 
-        if (!(sounds instanceof Array)) sounds = [];
+      // Find or create a matching node for this path. If it doesn't have child
+      // nodes yet, make a shallow map to track valid paths.
+      var node = this.tree.at(sounds);
+      if (node.nodes === null) {
+        node.nodes = Tree.sprout(this.traits.pairSet, sounds);
+      }
 
-        // Find or create a matching node for this path. If it doesn't have child
-        // nodes yet, make a shallow map to track valid paths.
-        var node = this.tree.at(sounds);
-        if (node.nodes === null) {
-          node.nodes = Tree.sprout(this.traits.pairSet, sounds);
-        }
-
-        // Loop over remaining child nodes and investigate their subtrees.
-        _.shuffle(_.keys(node.nodes)).forEach(function (sound) {
-          var path = sounds.concat(sound);
-          // Invalidate the path if it doesn't qualify as a partial word.
-          if (!traits$validPart.call(_this.traits, path)) {
-            delete node.nodes[sound];
-            return;
-          }
-          // (1)(2) -> pre-order, (2)(1) -> post-order. Post-order is required by
-          // State#walkRandom().
-          // (2) Continue recursively.
-          _this.walk(iterator, path);
-          // (1) If this path hasn't yet been visited, feed it to the iterator.
-          if (!node.at([sound]).visited) iterator(path);
-          // If this code is reached, the subtree is used up, so we forget about it.
+      // Loop over remaining child nodes and investigate their subtrees.
+      _.shuffle(_.keys(node.nodes)).forEach(function (sound) {
+        var path = sounds.concat(sound);
+        // Invalidate the path if it doesn't qualify as a partial word.
+        if (!traits$validPart.call(_this.traits, path)) {
           delete node.nodes[sound];
-        });
-      },
-      writable: true,
-      configurable: true
-    },
-    walkRandom: {
-
-      // Walks the state's virtual tree; for each path given to the wrapper
-      // function, we visit its subpaths in random order, marking the corresponding
-      // nodes as visited. For the distribution to be random, the tree needs to be
-      // traversed in post-order. We only visit paths that qualify as valid complete
-      // words and haven't been visited before.
-
-      value: function walkRandom(iterator) {
-        var _this = this;
-
-        this.walk(function (sounds) {
-          _.shuffle(_.range(sounds.length)).forEach(function (index) {
-            if (!index) return;
-
-            var path = sounds.slice(0, index + 1);
-            var node = _this.tree.at(path);
-
-            if (!node.visited) {
-              node.visited = true;
-              if (traits$validComplete.call(_this.traits, path)) {
-                iterator(path);
-              }
-            }
-          });
-        });
-      },
-      writable: true,
-      configurable: true
-    },
-    trip: {
-      value: function trip(iterator) {
-        try {
-          this.walkRandom(function (sounds) {
-            iterator(sounds);
-            throw null;
-          });
-        } catch (err) {
-          if (err !== null) throw err;
+          return;
         }
-      },
-      writable: true,
-      configurable: true
+        // (1)(2) -> pre-order, (2)(1) -> post-order. Post-order is required by
+        // State#walkRandom().
+        // (2) Continue recursively.
+        _this.walk(iterator, path);
+        // (1) If this path hasn't yet been visited, feed it to the iterator.
+        if (!node.at([sound]).visited) iterator(path);
+        // If this code is reached, the subtree is used up, so we forget about it.
+        delete node.nodes[sound];
+      });
     }
-  });
+
+    // Walks the state's virtual tree; for each path given to the wrapper
+    // function, we visit its subpaths in random order, marking the corresponding
+    // nodes as visited. For the distribution to be random, the tree needs to be
+    // traversed in post-order. We only visit paths that qualify as valid complete
+    // words and haven't been visited before.
+  }, {
+    key: 'walkRandom',
+    value: function walkRandom(iterator) {
+      var _this2 = this;
+
+      this.walk(function (sounds) {
+        _.shuffle(_.range(sounds.length)).forEach(function (index) {
+          if (!index) return;
+
+          var path = sounds.slice(0, index + 1);
+          var node = _this2.tree.at(path);
+
+          if (!node.visited) {
+            node.visited = true;
+            if (traits$validComplete.call(_this2.traits, path)) {
+              iterator(path);
+            }
+          }
+        });
+      });
+    }
+  }, {
+    key: 'trip',
+    value: function trip(iterator) {
+      try {
+        this.walkRandom(function (sounds) {
+          iterator(sounds);
+          throw null; // eslint-disable-line
+        });
+      } catch (err) {
+        if (err !== null) throw err;
+      }
+    }
+  }]);
 
   return State;
-})(null);
+})();
 
-/*********************************** Tree ************************************/
-
-var Tree = (function (_ref3) {
+var Tree = (function () {
   function Tree() {
     _classCallCheck(this, Tree);
 
-    // Map of strings to Tree objects. Keys represent node values (sounds).
     this.nodes = null;
     this.visited = false;
   }
 
-  _inherits(Tree, _ref3);
+  /** ****************************** Utilities *********************************/
 
-  _prototypeProperties(Tree, {
-    sprout: {
+  // Takes a word and splits it into a series of known glyphs representing sounds.
 
-      // Creates child nodes for a tree from the given pairs on the given path.
-
-      value: function sprout(pairs, path) {
-        var nodes = Object.create(null);
-
-        // If no sound were passed, start from the root.
-        if (!path.length) {
-          pairs.forEach(function (pair) {
-            nodes[pair[0]] = nodes[pair[0]] || new Tree();
-          });
-        }
-        // Otherwise continue from the given path.
-        else {
-          // [ ... sounds ... ( last sound ] <- pair -> next sound )
-          //
-          // We investigate pairs that begin with the last sound of the given
-          // preceding sounds. Their second sounds form a set that, when individually
-          // appended to the preceding sounds, form foundation paths for child
-          // subtrees. We register these second sounds on the child node map.
-          pairs.forEach(function (pair) {
-            if (pair[0] === path[path.length - 1]) {
-              nodes[pair[1]] = new Tree();
-            }
-          });
-        }
-
-        return nodes;
-      },
-      writable: true,
-      configurable: true
+  _createClass(Tree, [{
+    key: 'at',
+    value: function at(path) {
+      var node = this;
+      path.forEach(function (value) {
+        if (!node.nodes[value]) node.nodes[value] = new Tree();
+        node = node.nodes[value];
+      });
+      return node;
     }
-  }, {
-    at: {
-      value: function at(path) {
-        var node = this;
-        path.forEach(function (value) {
-          if (!node.nodes[value]) node.nodes[value] = new Tree();
-          node = node.nodes[value];
+
+    // Creates child nodes for a tree from the given pairs on the given path.
+  }], [{
+    key: 'sprout',
+    value: function sprout(pairs, path) {
+      var nodes = Object.create(null);
+
+      // If no sound were passed, start from the root.
+      if (!path.length) {
+        pairs.forEach(function (pair) {
+          nodes[pair[0]] = nodes[pair[0]] || new Tree();
         });
-        return node;
-      },
-      writable: true,
-      configurable: true
+      } else {
+        // Otherwise continue from the given path.
+        // [ ... sounds ... ( last sound ] <- pair -> next sound )
+        //
+        // We investigate pairs that begin with the last sound of the given
+        // preceding sounds. Their second sounds form a set that, when individually
+        // appended to the preceding sounds, form foundation paths for child
+        // subtrees. We register these second sounds on the child node map.
+        pairs.forEach(function (pair) {
+          if (pair[0] === path[path.length - 1]) {
+            nodes[pair[1]] = new Tree();
+          }
+        });
+      }
+
+      return nodes;
     }
-  });
+  }]);
 
   return Tree;
-})(null);
+})();
 
-/********************************* StringSet *********************************/
-
-// Behaves like a set of strings. Does not conform to the Set API.
-
-var StringSet = (function (_ref4) {
-  function StringSet(values) {
-    _classCallCheck(this, StringSet);
-
-    if (values) values.forEach(this.add, this);
-  }
-
-  _inherits(StringSet, _ref4);
-
-  _prototypeProperties(StringSet, null, {
-    has: {
-      value: function has(value) {
-        return this[value] === null;
-      },
-      writable: true,
-      configurable: true
-    },
-    add: {
-      value: function add(value) {
-        this[value] = null;
-      },
-      writable: true,
-      configurable: true
-    },
-    del: {
-      value: function del(value) {
-        delete this[value];
-      },
-      writable: true,
-      configurable: true
-    }
-  });
-
-  return StringSet;
-})(null);
-
-/********************************** PairSet **********************************/
-
-// Behaves like a set of pairs of strings. Does not conform to the Set API.
-
-var PairSet = (function (Array) {
-  function PairSet(pairs) {
-    _classCallCheck(this, PairSet);
-
-    if (pairs) pairs.forEach(this.add, this);
-  }
-
-  _inherits(PairSet, Array);
-
-  _prototypeProperties(PairSet, null, {
-    has: {
-      value: function has(pair) {
-        return _.any(this, function (existing) {
-          return pair[0] === existing[0] && pair[1] === existing[1];
-        });
-      },
-      writable: true,
-      configurable: true
-    },
-    add: {
-      value: function add(pair) {
-        if (!this.has(pair)) this.push(pair);
-      },
-      writable: true,
-      configurable: true
-    },
-    del: {
-      value: function del(pair) {
-        _.remove(this, function (existing) {
-          return pair[0] === existing[0] && pair[1] === existing[1];
-        });
-      },
-      writable: true,
-      configurable: true
-    }
-  });
-
-  return PairSet;
-})(Array);
-
-/*********************************** Pair ************************************/
-
-// Pair of strings.
-
-var Pair = (function (_ref5) {
-  function Pair(one, two) {
-    _classCallCheck(this, Pair);
-
-    assertString(one);
-    assertString(two);
-    this[0] = one;
-    this[1] = two;
-  }
-
-  _inherits(Pair, _ref5);
-
-  return Pair;
-})(null);
-
-/********************************* Utilities *********************************/
-
-// Takes a word and splits it into a series of known glyphs representing sounds.
 function getSounds(word, known) {
   var sounds = [];
 
@@ -549,11 +509,13 @@ function getSounds(word, known) {
     if (digraph.length > 1 && known.has(digraph)) {
       sounds.push(digraph);
       i++;
+      // Check for a known monograph.
     } else if (known.has(word[i])) {
-      sounds.push(word[i]);
-    } else {
-      throw new Error("encountered unknown symbol: " + word[i]);
-    }
+        sounds.push(word[i]);
+        // Otherwise throw an error.
+      } else {
+          throw new Error('encountered unknown symbol: ' + word[i]);
+        }
   }
 
   return sounds;
@@ -572,7 +534,7 @@ function getPairs(sounds) {
 // Counts the occurrences of the given pair of strings in the given sequence.
 function countPair(strings, prev, current) {
   var count = 0;
-  var ownPrev;
+  var ownPrev = undefined;
   for (var index = 0; index < strings.length; index++) {
     var ownCurrent = strings[index];
     if (!index) {
@@ -586,31 +548,30 @@ function countPair(strings, prev, current) {
 
 // Asserts that the given value is a string.
 function assertString(value) {
-  if (typeof value !== "string") {
-    throw new TypeError("expected a string, got: " + value);
+  if (typeof value !== 'string') {
+    throw new TypeError('expected a string, got: ' + value);
   }
 }
 
-/******************************* Known Sounds ********************************/
+// Minimum and maximum number of sounds.
 
-// Glyphs and digraphs in common English use. This doesn't represent all common
-// phonemes.
-var knownSounds = new StringSet([
-// Digraphs
-"ae", "ch", "ng", "ph", "sh", "th", "zh",
-// ISO basic Latin monographs
-"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]);
+// Minimum and maximum number of vowels.
 
-// Vowel glyphs and digraphs in common English use.
-var knownVowels = new StringSet([
-// Digraphs
-"ae",
-// ISO basic Latin monographs
-"a", "e", "i", "o", "u", "y"]);
-// Check for a known monograph.
-// Otherwise throw an error.
-    module.exports = Traits;
-    if (typeof process === 'object' && process !== null && process.env.CODEX_ENV === 'testing') Traits.Pair = Pair;
-    if (typeof process === 'object' && process !== null && process.env.CODEX_ENV === 'testing') Traits.PairSet = PairSet;
-    Traits.StringSet = StringSet;
-  });
+// Maximum number of consequtive vowels.
+
+// Maximum number of consequtive consonants.
+
+// Set of sounds that occur in the words.
+
+// Set of pairs of sounds that occur in the words.
+
+// Replacement sound set to use instead of the default `knownSounds`.
+
+// Replacement sound set to use instead of the default `knownVowels`.
+
+// Map of strings to Tree objects. Keys represent node values (sounds).
+  module.exports = Traits;
+  if (typeof process === 'object' && process !== null && process.env.CODEX_ENV === 'testing') Traits.Pair = Pair;
+  if (typeof process === 'object' && process !== null && process.env.CODEX_ENV === 'testing') Traits.PairSet = PairSet;
+  Traits.StringSet = StringSet;
+});

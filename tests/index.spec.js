@@ -1,28 +1,36 @@
 'use strict'
 
-/******************************* Dependencies ********************************/
+/* global jasmine, describe, it, expect, beforeEach */
 
-var _ = require('lodash')
-var Traits = require('../dist/index')
-var Pair = Traits.Pair
-var PairSet = Traits.PairSet
-var StringSet = Traits.StringSet
+/**
+ * Requires Node.js 4.0+
+ *
+ * Style per http://standardjs.com
+ */
 
-/*********************************** Specs ***********************************/
+/** **************************** Dependencies ********************************/
 
-describe('Traits constructor', function() {
+const _ = require('lodash')
+const Traits = require('../dist/index')
+const Pair = Traits.Pair
+const PairSet = Traits.PairSet
+const StringSet = Traits.StringSet
 
-  it('is a function', function() {
+/** ******************************** Specs ***********************************/
+
+describe('Traits constructor', function () {
+
+  it('is a function', function () {
     expect(Traits).toEqual(jasmine.any(Function))
   })
 
-  it('survives any argument', function() {
-    function caller(input) {new Traits(input)}
+  it('survives any argument', function () {
+    function caller (input) {new Traits(input)} // eslint-disable-line
     expect(_.wrap(caller, callWithAllInputs)).not.toThrow()
   })
 
-  it('sets default fields', function() {
-    var traits = new Traits()
+  it('sets default fields', function () {
+    const traits = new Traits()
     expect(traits.minNSounds).toBe(0)
     expect(traits.maxNSounds).toBe(0)
     expect(traits.minNVowels).toBe(0)
@@ -35,10 +43,10 @@ describe('Traits constructor', function() {
 
 })
 
-describe('Traits instance', function() {
+describe('Traits instance', function () {
 
-  it('examines words and learns their traits', function() {
-    var traits = new Traits()
+  it('examines words and learns their traits', function () {
+    const traits = new Traits()
     traits.examine(mockSourceWords())
 
     expect(traits.minNSounds).toBe(4)
@@ -49,49 +57,49 @@ describe('Traits instance', function() {
     expect(traits.maxConseqCons).toBe(3)
 
     // Expected set of sounds.
-    var soundSet = mockSoundSet()
+    const soundSet = mockSoundSet()
 
     // Compare soundsets.
     expect(_.size(soundSet)).toBe(10)
     expect(_.size(traits.soundSet)).toBe(_.size(soundSet))
-    for (var sound in soundSet) {
+    for (let sound in soundSet) {
       expect(traits.soundSet.has(sound)).toBe(true)
     }
 
     // Expected set of pairs of sounds.
-    var pairSet = mockPairSet()
+    const pairSet = mockPairSet()
 
     // Compare sets of pairs.
     expect(pairSet.length).toBe(12)
     expect(traits.pairSet.length).toBe(pairSet.length)
-    for (var pair of pairSet.values()) {
+    for (let pair of pairSet) {
       expect(traits.pairSet.has(pair)).toBe(true)
     }
   })
 
-  it('creates a generator function', function() {
-    var traits = mockTraits()
+  it('creates a generator function', function () {
+    const traits = mockTraits()
     expect(traits.generator()).toEqual(jasmine.any(Function))
   })
 
 })
 
-describe('generator function', function() {
+describe('generator function', function () {
 
-  beforeEach(function() {
+  beforeEach(function () {
     this.traits = mockTraits()
     this.gen = this.traits.generator()
   })
 
-  it('returns a word', function() {
+  it('returns a word', function () {
     expect(typeof this.gen()).toBe('string')
   })
 
-  it('never repeats a word and eventually exhausts', function() {
-    var words = new StringSet()
+  it('never repeats a word and eventually exhausts', function () {
+    const words = new StringSet()
 
     while (true) {
-      var word = this.gen()
+      const word = this.gen()
       expect(typeof word).toBe('string')
       expect(words.has(word)).toBe(false)
       if (word === '') break
@@ -102,25 +110,25 @@ describe('generator function', function() {
     expect(_.size(words)).toBeGreaterThan(50)
   })
 
-  it('only returns valid complete words', function() {
-    var words = new StringSet()
-    var word
-    while (word = this.gen()) words.add(word)
+  it('only returns valid complete words', function () {
+    const words = new StringSet()
+    let word
+    while ((word = this.gen())) words.add(word)
 
-    for (var word in words) {
-      var valid = isValid(word)
+    for (let word in words) {
+      const valid = isValid(word)
       expect(valid).toBe(true)
       if (!valid) return
     }
   })
 
-  it('includes source words', function() {
-    var words = new StringSet()
-    var word
-    while (word = this.gen()) words.add(word)
+  it('includes source words', function () {
+    const words = new StringSet()
+    let word
+    while ((word = this.gen())) words.add(word)
 
-    for (var word of mockSourceWords()) {
-      var includes = words.has(word)
+    for (let word of mockSourceWords()) {
+      const includes = words.has(word)
       expect(includes).toBe(true)
       if (!includes) return
     }
@@ -128,33 +136,33 @@ describe('generator function', function() {
 
 })
 
-/********************************* Constants *********************************/
+/** ****************************** Constants *********************************/
 
-function mockSourceWords() {
+function mockSourceWords () {
   return ['three', 'random', 'words']
 }
 
-function mockSounds() {
+function mockSounds () {
   return ['th', 'r', 'e', 'a', 'n', 'd', 'o', 'm', 'w', 's']
 }
 
-function mockVowels() {
+function mockVowels () {
   return ['e', 'a', 'o']
 }
 
-function mockSoundSet() {
-  var set = new StringSet()
-  for (var sound of mockSounds()) set.add(sound)
+function mockSoundSet () {
+  const set = new StringSet()
+  for (let sound of mockSounds()) set.add(sound)
   return set
 }
 
-function mockVowelSet() {
-  var set = new StringSet()
-  for (var vowel of mockVowels()) set.add(vowel)
+function mockVowelSet () {
+  const set = new StringSet()
+  for (let vowel of mockVowels()) set.add(vowel)
   return set
 }
 
-function mockPairSet() {
+function mockPairSet () {
   return new PairSet([
     new Pair('th', 'r'),
     new Pair('r', 'e'),
@@ -171,20 +179,20 @@ function mockPairSet() {
   ])
 }
 
-function mockTraits() {
-  var traits = new Traits()
+function mockTraits () {
+  const traits = new Traits()
   traits.examine(mockSourceWords())
   return traits
 }
 
-/********************************* Utilities *********************************/
+/** ****************************** Utilities *********************************/
 
 /**
  * Calls the given function without arguments and with lots of different
  * arguments.
  * @param Function
  */
-function callWithAllInputs(fn) {
+function callWithAllInputs (fn) {
   fn()
   fn(undefined)
   fn('')
@@ -199,19 +207,19 @@ function callWithAllInputs(fn) {
   fn({})
   fn([])
   fn(/reg/)
-  fn(function() {})
+  fn(function () {})
 }
 
 /**
  * Splits the given word into a series of sound glyphs, using mock sounds as
  * reference.
  */
-function getSounds(word /* : string */) /* : string[] */ {
-  var known = mockSoundSet()
-  var sounds = []
-  for (var i = 0; i < word.length; i++) {
-    var monograph = word[i]
-    var digraph = monograph + word[i + 1]
+function getSounds (word /* : string */) /* : string[] */ {
+  const known = mockSoundSet()
+  const sounds = []
+  for (let i = 0; i < word.length; i++) {
+    const monograph = word[i]
+    const digraph = monograph + word[i + 1]
     if (known.has(digraph)) {
       sounds.push(digraph)
       i++
@@ -228,10 +236,10 @@ function getSounds(word /* : string */) /* : string[] */ {
  * Extracts the sequence of vowels from the given word, using mock sounds as
  * reference.
  */
-function getVowels(word /* : string */) /* : string[] */ {
-  var known = mockVowelSet()
-  var vowels = []
-  for (var sound of getSounds(word)) {
+function getVowels (word /* : string */) /* : string[] */ {
+  const known = mockVowelSet()
+  const vowels = []
+  for (let sound of getSounds(word)) {
     if (known.has(sound)) vowels.push(sound)
   }
   return vowels
@@ -241,11 +249,11 @@ function getVowels(word /* : string */) /* : string[] */ {
  * Returns the max number of consequtive vowels from the given word, using
  * mock vowels as reference.
  */
-function maxConseqVow(word /* : string */) /* : number */ {
-  var count = 0
-  var max = 0
-  var vowels = mockVowelSet()
-  for (var sound of getSounds(word)) {
+function maxConseqVow (word /* : string */) /* : number */ {
+  let count = 0
+  let max = 0
+  const vowels = mockVowelSet()
+  for (let sound of getSounds(word)) {
     if (vowels.has(sound)) max = Math.max(max, ++count)
     else count = 0
   }
@@ -256,11 +264,11 @@ function maxConseqVow(word /* : string */) /* : number */ {
  * Returns the max number of consequtive consonants from the given word, using
  * mock vowels as reference.
  */
-function maxConseqCons(word /* : string */) /* : number */ {
-  var count = 0
-  var max = 0
-  var vowels = mockVowelSet()
-  for (var sound of getSounds(word)) {
+function maxConseqCons (word /* : string */) /* : number */ {
+  let count = 0
+  let max = 0
+  const vowels = mockVowelSet()
+  for (let sound of getSounds(word)) {
     if (!vowels.has(sound)) max = Math.max(max, ++count)
     else count = 0
   }
@@ -271,18 +279,23 @@ function maxConseqCons(word /* : string */) /* : number */ {
  * Verifies that the given word satisfies our rough criteria for a valid
  * complete word matching the mock traits.
  */
-function isValid(word /* : string */) /* : boolean */ {
-  var traits = mockTraits()
-  var knownSounds = mockSoundSet()
-  var knownPairs = mockPairSet()
+function isValid (word /* : string */) /* : boolean */ {
+  const traits = mockTraits()
+  const knownSounds = mockSoundSet()
+  const knownPairs = mockPairSet()
+  let sounds = null
 
   // The word must contain only valid glyphs.
-  try {var sounds = getSounds(word)} catch (err) {return false}
-  for (var sound of sounds) if (!knownSounds.has(sound)) return false
+  try {
+    sounds = getSounds(word)
+  } catch (err) {
+    return false
+  }
+  for (let sound of sounds) if (!knownSounds.has(sound)) return false
 
   // The word must contain only known pairs.
-  for (var i = 0; i < sounds.length - 1; i++) {
-    var pair = new Pair(sounds[i], sounds[i + 1])
+  for (let i = 0; i < sounds.length - 1; i++) {
+    const pair = new Pair(sounds[i], sounds[i + 1])
     if (!knownPairs.has(pair)) return false
   }
 
